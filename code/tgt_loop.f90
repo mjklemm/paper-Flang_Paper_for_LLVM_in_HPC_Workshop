@@ -10,4 +10,4 @@ subroutine saxpy(x, y, a, n)
     do i = 1, n
         y(i) = a * x(i) + y(i) 
     end do
-end subroutine
+end subroutine saxpy
