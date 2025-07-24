@@ -152,10 +152,17 @@ proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
                 {code/tgt_loop.f90}
 \end{figure}
 
+\begin{figure}[t]
+\lstinputlisting[language=Fortran,
+                caption{Fortran code of Listing~\ref{lst:FortranExample} after preprocessing and prescanning.},
+                label={lst:FortranExampleCooked}]
+                {code/tgt_loop_.f90}
+\end{figure}
+
 Figure~\ref{fig:FlangCompilerPhases} shows a simplified overview of the compiler pipeline of the LLVM Flang compiler frontend up to LLVM \ac{IR} generation.
 The same stages are also used by the AMD Next-Gen Fortran Compiler front-end.
-In the Prescanner \& Preprocessor stage, the lexical analysis and C-style processor produce a stream of characters of normalized Fortran source code. 
-This code contains expanded preprocessor macros, included code resulting from \code{INCLUDE} statements, and removed unnecessary blank characters and comments (see Figure~\ref{lst:NormalizedFortran}\todo{Add example?}).
+In the Prescanner \& Preprocessor stage, the lexical analysis and C-style processor produce a stream of characters of normalized Fortran source code (see Listing~\ref{lst:NormalizedFortranCooked}). 
+This code contains expanded preprocessor macros, included code resulting from \code{INCLUDE} statements, and removed unnecessary blank characters and comments.
 Compiler directives such as \code{!\$dir} and the OpenMP directives introduced with \code{!\$omp} remain in the stream of characters.
 The parser and semantic analysis stages then construct a parse tree of the processed Fortran code and annotate it with semantic information (e.g., data types).
 The parse tree contains all details about OpenMP directives, clauses, etc. as nodes in the tree.
