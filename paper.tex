@@ -1,3 +1,6 @@
+% CFP: https://discourse.llvm.org/t/cfp-llvm-hpc-workshop-at-sc-25/86391
+% At least 5 two-column pages, excluding the bibliography and figures
+
 \documentclass[acmtog,natbib=false]{acmart}
 \AtBeginDocument{\providecommand\BibTeX{{ Bib\TeX}}}
 
@@ -8,6 +11,7 @@ style=acmnumeric, % use style=acmauthoryear for publications that require it
 \addbibresource{references.bib}
 
 \usepackage[T1]{fontenc}
+\usepackage{listings}
 \usepackage{xspace}
 \usepackage[printonlyused]{acronym}
 
@@ -28,6 +32,13 @@ style=acmnumeric, % use style=acmauthoryear for publications that require it
 %% of the event, and this ID should be used as the parameter to this command.
 \acmSubmissionID{tbd}
 
+%% configure the listings package
+\lstset{
+  basicstyle=\ttfamily\small,
+  % frame=single,
+  captionpos=b,
+}
+
 
 %% useful macros
 \newcommand{\todo}[1]{\textcolor{red}{#1}}
@@ -36,7 +47,7 @@ style=acmnumeric, % use style=acmauthoryear for publications that require it
 \newcommand{\trademark}[0]{\texttrademark\xspace}
 
 \begin{document}
-\title{We need a Title for this Paper!}
+\title{Implementing OpenMP Offload Support in LLVM Flang}
 
 \author{Dominik Adamski}
 \email{dominik.adamski@amd.com}
@@ -56,6 +67,16 @@ style=acmnumeric, % use style=acmauthoryear for publications that require it
   \city{Munich}
   \state{BY}
   \country{Germany}
+}
+
+\author{Andrew Gozillon}
+\email{andrew.gozillon@amd.com}
+\orcid{0000-0001-7558-7166}
+\affiliation{%
+  \institution{Advanced Micro Devices AB}
+  \city{Malmo}
+  \state{Skåne County}
+  \country{Sweden}
 }
 
 \renewcommand{\shortauthors}{Adamski et al.}
@@ -117,33 +138,45 @@ proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 \subsection{Fortran Compiler Pipeline}
 \label{sec:FortranCompilerPipeline}
 \todo{This is a copy of another paper; this needs to be reworded and extended.}
-Figure~\ref{fig:FlangCompilerPhases} shows a (simplified) overview of the compiler pipeline of the AMD Next-Gen Fortran Compiler front-end.
-The Prescanner \& Preprocessor stage produces a stream of characters of normalized Fortran source code. 
-Preprocessor macros have been expanded, \code{INCLUDE} statements have been replaced with the included code, and unnecessary blank characters and comments have been removed.
-Compiler directives such as \code{!\$dir} and the OpenMP directives introduced with \code{!\$omp} remain in the stream of characters.
-The parser and semantic analysis stages then construct the parse tree of the processed Fortran code and annotate it with semantic information (e.g., data types).
-In this representation, the OpenMP directives and their clauses are reflected as nodes in the parse tree.
 
 \begin{figure}[t]
-    \centering
-    \includegraphics[width=\linewidth]{figures/flang_compiler_phases_overview.pdf}
-    \caption{Simplified overview of the compiler phases in the AMD Next-Gen Fortran Compiler front-end.\label{fig:FlangCompilerPhases}}
+\centering
+\includegraphics[width=\linewidth]{figures/flang_compiler_phases_overview.pdf}
+\caption{Simplified overview of the compiler phases in the AMD Next-Gen Fortran Compiler front-end.\label{fig:FlangCompilerPhases}}
 \end{figure}
 
-Through various lowering phases, the parse tree and the contained OpenMP directive structure are transformed into the \ac{MLIR} dialects for \ac{HLFIR} and \ac{FIR}.
-\ac{HLFIR} provides additional high-level semantical information over \ac{FIR} (e.g., array operations that can be used to optimize Fortran array statements).
+\begin{figure}[t]
+\lstinputlisting[language=Fortran,
+                caption={Example Fortran code with \code{!\$omp target team loop} construct and \code{map} clauses},
+                label={lst:FortranExample}]
+                {code/tgt_loop.f90}
+\end{figure}
+
+Figure~\ref{fig:FlangCompilerPhases} shows a simplified overview of the compiler pipeline of the LLVM Flang compiler frontend up to LLVM \ac{IR} generation.
+The same stages are also used by the AMD Next-Gen Fortran Compiler front-end.
+In the Prescanner \& Preprocessor stage, the lexical analysis and C-style processor produce a stream of characters of normalized Fortran source code. 
+This code contains expanded preprocessor macros, included code resulting from \code{INCLUDE} statements, and removed unnecessary blank characters and comments (see Figure~\ref{lst:NormalizedFortran}\todo{Add example?}).
+Compiler directives such as \code{!\$dir} and the OpenMP directives introduced with \code{!\$omp} remain in the stream of characters.
+The parser and semantic analysis stages then construct a parse tree of the processed Fortran code and annotate it with semantic information (e.g., data types).
+The parse tree contains all details about OpenMP directives, clauses, etc. as nodes in the tree.
+
+The parse tree is then transformed into different levels of intermediate representation, depending on the needs of the applied transformation and optimization passes.
+First, the parse tree and the contained OpenMP directive structure are transformed into \ac{HLFIR} and \ac{FIR}, both of which are based on \ac{MLIR}.
+\Ac{HLFIR} provides additional high-level information over \ac{FIR} about the specific semantics of Fortran (e.g., array operations that can be used to optimize Fortran array statements).
 It also has additional information in the type system to represent Fortran attributes for (dummy) variables.
-Both \ac{HLFIR} and \ac{FIR} contain explicit information about the OpenMP directives and clauses as well as their nesting structure.
-For instance, an associated Fortran \code{DO} loop nest is associated with the corresponding OpenMP worksharing construct such as \code{LOOP}.
+Both \ac{HLFIR} and \ac{FIR} still contain explicit information about the OpenMP directives and clauses as well as their nesting structure.
+For instance, \code{DO} loop nest is associated with the corresponding OpenMP \code{target teams loop} construct (see Figure~\ref{fig:MLIROffloadIR}\todo{Add example of a simple offload region and show MLIR for it.})
 Finally, the \ac{MLIR} code is transformed into regular LLVM \ac{IR} and is passed to the compiler back-end for target code generation.
+
+
+\subsection{OpenMP Code Generation}
+\label{sec:OpenMPCodeGen}
 
 During lowering, the compiler outlines OpenMP \code{target} regions and creates kernel functions per region such that the back-end can generate \ac{GPU} code for those in addition to host code.
 The original intermediate code is then replaced with boilerplate code to launch the created kernel functions.
 This involves generated code to perform data mapping according to the OpenMP semantics and code to invoke the kernel on the GPU via the runtime libraries.
 
-\subsection{OpenMP Code Generation}
-\label{sec:OpenMPCodeGen}
-
+\todo{Andrew: you could write about the actual lowering and code-gen for OpenMP, focus on GPU code-gen and outlining.}
 
 
 
@@ -152,7 +185,7 @@ This involves generated code to perform data mapping according to the OpenMP sem
 
 \input{acronyms}
 
-\section*{Acknowledgements}
+\section*{Acknowledgments}
 Copyright 2025 Advanced Micro Devices, Inc.
 AMD, the AMD Arrow logo, Instinct, Radeon, and EPYC, and combinations thereof are trademarks of Advanced Micro Devices, Inc.
 Other product names used in this publication are for identification purposes only and may be trademarks of their respective companies.
