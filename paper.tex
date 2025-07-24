@@ -1,0 +1,163 @@
+\documentclass[acmtog,natbib=false]{acmart}
+\AtBeginDocument{%
+  \providecommand\BibTeX{{%
+    Bib\TeX}}}
+
+\RequirePackage[
+datamodel=acmdatamodel,
+style=acmnumeric, % use style=acmauthoryear for publications that require it
+]{biblatex}
+\addbibresource{references.bib}
+
+\usepackage[T1]{fontenc}
+\usepackage{xspace}
+\usepackage[printonlyused]{acronym}
+
+%% Rights management information.  This information is sent to you
+%% when you complete the rights form.  These commands have SAMPLE
+%% values in them; it is your responsibility as an author to replace
+%% the commands and values with those provided to you when you
+%% complete the rights form.
+\setcopyright{acmlicensed}
+\copyrightyear{2025}
+\acmYear{2025}
+\acmDOI{XXXXXXX.XXXXXXX}
+
+%%
+%% Submission ID.
+%% Use this when submitting an article to a sponsored event. You'll
+%% receive a unique submission ID from the organizers
+%% of the event, and this ID should be used as the parameter to this command.
+\acmSubmissionID{tbd}
+
+
+%% useful macros
+\newcommand{\todo}[1]{\textcolor{red}{#1}}
+\newcommand{\code}[1]{\texttt{#1}\xspace}
+\newcommand{\registered}[0]{\textsuperscript{\textregistered}\xspace}
+\newcommand{\trademark}[0]{\texttrademark\xspace}
+
+\begin{document}
+\title{We need a Title for this Paper!}
+
+\author{Dominik Adamski}
+\email{dominik.adamski@amd.com}
+\affiliation{%
+  \institution{Advanced Micro Devices}
+  \city{tbd}
+  \state{tbd}
+  \country{Poland}
+}
+\orcid{}
+
+\author{Michael Klemm}
+\email{michael.klemm@amd.com}
+\orcid{0000-0002-8634-4634}
+\affiliation{%
+  \institution{Advanced Micro Devices GmbH}
+  \city{Munich}
+  \state{BY}
+  \country{Germany}
+}
+
+\renewcommand{\shortauthors}{Adamski et al.}
+
+\begin{abstract}s
+Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
+cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
+cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+\end{abstract}
+
+%% generate via: https://dl.acm.org/ccs
+\begin{CCSXML}
+<ccs2012>
+   <concept>
+       <concept_id>10011007.10011006.10011041</concept_id>
+       <concept_desc>Software and its engineering~Compilers</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+   <concept>
+       <concept_id>10010147.10010169.10010175</concept_id>
+       <concept_desc>Computing methodologies~Parallel programming languages</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+   <concept>
+       <concept_id>10010520.10010521.10010542.10010546</concept_id>
+       <concept_desc>Computer systems organization~Heterogeneous (hybrid) systems</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+ </ccs2012>
+\end{CCSXML}
+\ccsdesc[500]{Software and its engineering~Compilers}
+\ccsdesc[500]{Computing methodologies~Parallel programming languages}
+\ccsdesc[500]{Computer systems organization~Heterogeneous (hybrid) systems}
+
+\keywords{LLVM, Flang, OpenMP, GPU, Accelerators}
+
+\received{20 February 2007}
+\received[revised]{12 March 2009}
+\received[accepted]{5 June 2009}
+
+\maketitle
+
+\section{Introduction}
+\label{sec:Introduction}
+\Ac{GPU} is an acronym, and let's use a citation~\cite{AMD24}.
+
+\section{LLVM Flang Compiler}
+\label{sec:LLVMFlangCompiler}
+
+\subsection{Fortran Compiler Pipeline}
+\label{sec:FortranCompilerPipeline}
+\todo{This is a copy of another paper; this needs to be reworded and extended.}
+Figure~\ref{fig:FlangCompilerPhases} shows a (simplified) overview of the compiler pipeline of the AMD Next-Gen Fortran Compiler front-end.
+The Prescanner \& Preprocessor stage produces a stream of characters of normalized Fortran source code. 
+Preprocessor macros have been expanded, \code{INCLUDE} statements have been replaced with the included code, and unnecessary blank characters and comments have been removed.
+Compiler directives such as \code{!\$dir} and the OpenMP directives introduced with \code{!\$omp} remain in the stream of characters.
+The parser and semantic analysis stages then construct the parse tree of the processed Fortran code and annotate it with semantic information (e.g., data types).
+In this representation, the OpenMP directives and their clauses are reflected as nodes in the parse tree.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{figures/flang_compiler_phases_overview.pdf}
+    \caption{Simplified overview of the compiler phases in the AMD Next-Gen Fortran Compiler front-end.\label{fig:FlangCompilerPhases}}
+\end{figure}
+
+Through various lowering phases, the parse tree and the contained OpenMP directive structure are transformed into the \ac{MLIR} dialects for \ac{HLFIR} and \ac{FIR}.
+\ac{HLFIR} provides additional high-level semantical information over \ac{FIR} (e.g., array operations that can be used to optimize Fortran array statements).
+It also has additional information in the type system to represent Fortran attributes for (dummy) variables.
+Both \ac{HLFIR} and \ac{FIR} contain explicit information about the OpenMP directives and clauses as well as their nesting structure.
+For instance, an associated Fortran \code{DO} loop nest is associated with the corresponding OpenMP worksharing construct such as \code{LOOP}.
+Finally, the \ac{MLIR} code is transformed into regular LLVM \ac{IR} and is passed to the compiler back-end for target code generation.
+
+During lowering, the compiler outlines OpenMP \code{target} regions and creates kernel functions per region such that the back-end can generate \ac{GPU} code for those in addition to host code.
+The original intermediate code is then replaced with boilerplate code to launch the created kernel functions.
+This involves generated code to perform data mapping according to the OpenMP semantics and code to invoke the kernel on the GPU via the runtime libraries.
+
+\subsection{OpenMP Code Generation}
+\label{sec:OpenMPCodeGen}
+
+
+
+
+\section{Conclusions}
+\label{sec:Conclusions}
+
+\input{acronyms}
+
+\section*{Acknowledgements}
+AMD, the AMD Arrow logo, Instinct, Radeon, and EPYC, and combinations thereof are trademarks of Advanced Micro Devices, Inc.
+Other product names used in this publication are for identification purposes only and may be trademarks of their respective companies.
+
+\printbibliography
+
+\end{document}
