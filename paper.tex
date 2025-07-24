@@ -35,10 +35,8 @@ style=acmnumeric, % use style=acmauthoryear for publications that require it
 %% configure the listings package
 \lstset{
   basicstyle=\ttfamily\small,
-  % frame=single,
   captionpos=b,
 }
-
 
 %% useful macros
 \newcommand{\todo}[1]{\textcolor{red}{#1}}
@@ -154,9 +152,9 @@ proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 
 \begin{figure}[t]
 \lstinputlisting[language=Fortran,
-                caption{Fortran code of Listing~\ref{lst:FortranExample} after preprocessing and prescanning.},
+                caption={Fortran code of Listing~\ref{lst:FortranExample} after preprocessing and prescanning.},
                 label={lst:FortranExampleCooked}]
-                {code/tgt_loop_.f90}
+                {code/tgt_loop_cooked.f90}
 \end{figure}
 
 Figure~\ref{fig:FlangCompilerPhases} shows a simplified overview of the compiler pipeline of the LLVM Flang compiler frontend up to LLVM \ac{IR} generation.
@@ -167,7 +165,7 @@ Compiler directives such as \code{!\$dir} and the OpenMP directives introduced w
 The parser and semantic analysis stages then construct a parse tree of the processed Fortran code and annotate it with semantic information (e.g., data types).
 The parse tree contains all details about OpenMP directives, clauses, etc. as nodes in the tree.
 
-The parse tree is then transformed into different levels of intermediate representation, depending on the needs of the applied transformation and optimization passes.
+The parse tree is then gradually lowered into different levels of intermediate representation, depending on the needs of the applied transformation and optimization passes.
 First, the parse tree and the contained OpenMP directive structure are transformed into \ac{HLFIR} and \ac{FIR}, both of which are based on \ac{MLIR}.
 \Ac{HLFIR} provides additional high-level information over \ac{FIR} about the specific semantics of Fortran (e.g., array operations that can be used to optimize Fortran array statements).
 It also has additional information in the type system to represent Fortran attributes for (dummy) variables.
