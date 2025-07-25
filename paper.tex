@@ -221,7 +221,7 @@ First, the parse tree and the contained OpenMP directive structure are transform
 \Ac{HLFIR} provides additional high-level information over \ac{FIR} about the specific semantics of Fortran (e.g., array operations that can be used to optimize Fortran array statements).
 It also has additional information in the type system to represent Fortran attributes for (dummy) variables.
 Both \ac{HLFIR} and \ac{FIR} still contain explicit information about the OpenMP directives and clauses as well as their nesting structure.
-For instance, \code{DO} loop nest is associated with the corresponding OpenMP \code{target teams loop} construct (see Figure~\ref{fig:MLIROffloadIR}\todo{Add example of a simple offload region and show MLIR for it.})
+For instance, \code{DO} loop nest is associated with the corresponding OpenMP \code{target teams loop} construct (see Listing~\ref{lst:FortranExampleFIR}).
 Finally, the \ac{MLIR} code is transformed into regular LLVM \ac{IR} and is passed to the compiler back-end for target code generation.
 
 
