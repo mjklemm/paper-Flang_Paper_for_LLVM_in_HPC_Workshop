@@ -12,6 +12,22 @@ func.func @_QPsaxpy(
   %0 = fir.alloca i32
   %1 = fir.alloca i32
   [...]
+  %29 = omp.map.info
+    var_ptr(%15:!fir.ref<!fir.array<?xf32>>, f32)
+    map_clauses(to)
+    capture(ByRef)
+    bounds(%28)->!fir.ref<!fir.array<?xf32>>
+    {name = "x"}
+  %30 = omp.map.info
+    var_ptr(%5:!fir.ref<i32>, i32)
+    map_clauses(implicit, exit_release_or_enter_alloc)
+    capture(ByCopy)->!fir.ref<i32>
+    {name = "i"}
+  %31 = omp.map.info
+    var_ptr(%6 : !fir.ref<i32>, i32)
+    map_clauses(implicit, exit_release_or_enter_alloc)
+    capture(ByCopy)->!fir.ref<i32>
+    {name = "n"}
   %33 = omp.map.bounds
     lower_bound(%c0 : index)
     upper_bound(%32 : index)
@@ -24,20 +40,11 @@ func.func @_QPsaxpy(
     bounds(%33)->!fir.ref<!fir.array<?xf32>>
     {name = "y"}
   %35 = omp.map.info
-    var_ptr(%3 : !fir.ref<f32>, f32)
+    var_ptr(%3:!fir.ref<f32>, f32)
     map_clauses(implicit,
                 exit_release_or_enter_alloc)
     capture(ByCopy) -> !fir.ref<f32> {name = "a"}
-  %36 = omp.map.info
-    var_ptr(%1 : !fir.ref<i32>, i32)
-    map_clauses(implicit,
-                exit_release_or_enter_alloc)
-    capture(ByCopy) -> !fir.ref<i32> {name = ""}
-  %37 = omp.map.info
-    var_ptr(%0 : !fir.ref<i32>, i32)
-    map_clauses(implicit,
-                exit_release_or_enter_alloc)
-    capture(ByCopy) -> !fir.ref<i32> {name = ""}
+  [...]
   omp.target host_eval(%c1_i32 -> %arg4, [...])
       map_entries(%29 -> %arg7, [...]) {
     [...]
