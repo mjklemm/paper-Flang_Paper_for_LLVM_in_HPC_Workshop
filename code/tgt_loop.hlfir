@@ -1,0 +1,106 @@
+module attributes {dlti.dl_spec = #dlti.dl_spec<!llvm.ptr<270> = dense<32> : vector<4xi64>, !llvm.ptr<271> = dense<32> : vector<4xi64>, !llvm.ptr<272> = dense<64> : vector<4xi64>, i64 = dense<64> : vector<2xi64>, i128 = dense<128> : vector<2xi64>, f80 = dense<128> : vector<2xi64>, !llvm.ptr = dense<64> : vector<4xi64>, i1 = dense<8> : vector<2xi64>, i8 = dense<8> : vector<2xi64>, i16 = dense<16> : vector<2xi64>, i32 = dense<32> : vector<2xi64>, f16 = dense<16> : vector<2xi64>, f64 = dense<64> : vector<2xi64>, f128 = dense<128> : vector<2xi64>, "dlti.endianness" = "little", "dlti.mangling_mode" = "e", "dlti.legal_int_widths" = array<i32: 8, 16, 32, 64>, "dlti.stack_alignment" = 128 : i64>, fir.defaultkind = "a1c4d8i4l4r4", fir.kindmap = "", llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128", llvm.ident = "AMD flang version 22.0.0 (/longer_pathname_so_that_rpms_can_support_packaging_the_debug_info_for_all_os_profiles/src/llvm-project/flang 37de1b61434af16eca9df1f40bb2b0d6ffa0398c)", llvm.target_triple = "x86_64-unknown-linux-gnu", omp.is_gpu = false, omp.is_target_device = false, omp.requires = #omp<clause_requires none>, omp.target_triples = [], omp.version = #omp.version<version = 52>} {
+  omp.private {type = private} @_QFsaxpyEi_private_i32 : i32
+  func.func @_QPsaxpy(%arg0: !fir.ref<!fir.array<?xf32>> {fir.bindc_name = "x"}, %arg1: !fir.ref<!fir.array<?xf32>> {fir.bindc_name = "y"}, %arg2: !fir.ref<f32> {fir.bindc_name = "a"}, %arg3: !fir.ref<i32> {fir.bindc_name = "n"}) {
+    %0 = fir.alloca i32
+    %1 = fir.alloca i32
+    %2 = fir.dummy_scope : !fir.dscope
+    %3:2 = hlfir.declare %arg2 dummy_scope %2 {uniq_name = "_QFsaxpyEa"} : (!fir.ref<f32>, !fir.dscope) -> (!fir.ref<f32>, !fir.ref<f32>)
+    %4 = fir.alloca i32 {bindc_name = "i", uniq_name = "_QFsaxpyEi"}
+    %5:2 = hlfir.declare %4 {uniq_name = "_QFsaxpyEi"} : (!fir.ref<i32>) -> (!fir.ref<i32>, !fir.ref<i32>)
+    %6:2 = hlfir.declare %arg3 dummy_scope %2 {uniq_name = "_QFsaxpyEn"} : (!fir.ref<i32>, !fir.dscope) -> (!fir.ref<i32>, !fir.ref<i32>)
+    %7 = fir.address_of(@_QMiso_fortran_env_implECreal32) : !fir.ref<i32>
+    %8:2 = hlfir.declare %7 {fortran_attrs = #fir.var_attrs<parameter>, uniq_name = "_QMiso_fortran_env_implECreal32"} : (!fir.ref<i32>) -> (!fir.ref<i32>, !fir.ref<i32>)
+    %9 = fir.load %6#0 : !fir.ref<i32>
+    fir.store %9 to %0 : !fir.ref<i32>
+    %10 = fir.convert %9 : (i32) -> i64
+    %11 = fir.convert %10 : (i64) -> index
+    %c0 = arith.constant 0 : index
+    %12 = arith.cmpi sgt, %11, %c0 : index
+    %13 = arith.select %12, %11, %c0 : index
+    %14 = fir.shape %13 : (index) -> !fir.shape<1>
+    %15:2 = hlfir.declare %arg0(%14) dummy_scope %2 {uniq_name = "_QFsaxpyEx"} : (!fir.ref<!fir.array<?xf32>>, !fir.shape<1>, !fir.dscope) -> (!fir.box<!fir.array<?xf32>>, !fir.ref<!fir.array<?xf32>>)
+    %16 = fir.load %6#0 : !fir.ref<i32>
+    fir.store %16 to %1 : !fir.ref<i32>
+    %17 = fir.convert %16 : (i32) -> i64
+    %18 = fir.convert %17 : (i64) -> index
+    %c0_0 = arith.constant 0 : index
+    %19 = arith.cmpi sgt, %18, %c0_0 : index
+    %20 = arith.select %19, %18, %c0_0 : index
+    %21 = fir.shape %20 : (index) -> !fir.shape<1>
+    %22:2 = hlfir.declare %arg1(%21) dummy_scope %2 {uniq_name = "_QFsaxpyEy"} : (!fir.ref<!fir.array<?xf32>>, !fir.shape<1>, !fir.dscope) -> (!fir.box<!fir.array<?xf32>>, !fir.ref<!fir.array<?xf32>>)
+    %c1_i32 = arith.constant 1 : i32
+    %23 = fir.load %6#0 : !fir.ref<i32>
+    %c1_i32_1 = arith.constant 1 : i32
+    %c1 = arith.constant 1 : index
+    %c0_2 = arith.constant 0 : index
+    %24:3 = fir.box_dims %15#0, %c0_2 : (!fir.box<!fir.array<?xf32>>, index) -> (index, index, index)
+    %c0_3 = arith.constant 0 : index
+    %25 = arith.subi %24#1, %c1 : index
+    %26 = omp.map.bounds lower_bound(%c0_3 : index) upper_bound(%25 : index) extent(%24#1 : index) stride(%24#2 : index) start_idx(%c1 : index) {stride_in_bytes = true}
+    %27 = omp.map.info var_ptr(%15#1 : !fir.ref<!fir.array<?xf32>>, f32) map_clauses(to) capture(ByRef) bounds(%26) -> !fir.ref<!fir.array<?xf32>> {name = "x"}
+    %28 = omp.map.info var_ptr(%5#1 : !fir.ref<i32>, i32) map_clauses(implicit, exit_release_or_enter_alloc) capture(ByCopy) -> !fir.ref<i32> {name = "i"}
+    %29 = omp.map.info var_ptr(%6#1 : !fir.ref<i32>, i32) map_clauses(implicit, exit_release_or_enter_alloc) capture(ByCopy) -> !fir.ref<i32> {name = "n"}
+    %c1_4 = arith.constant 1 : index
+    %c0_5 = arith.constant 0 : index
+    %30 = arith.subi %20, %c1_4 : index
+    %31 = omp.map.bounds lower_bound(%c0_5 : index) upper_bound(%30 : index) extent(%20 : index) stride(%c1_4 : index) start_idx(%c1_4 : index)
+    %32 = omp.map.info var_ptr(%22#1 : !fir.ref<!fir.array<?xf32>>, f32) map_clauses(implicit, tofrom) capture(ByRef) bounds(%31) -> !fir.ref<!fir.array<?xf32>> {name = "y"}
+    %33 = omp.map.info var_ptr(%3#1 : !fir.ref<f32>, f32) map_clauses(implicit, exit_release_or_enter_alloc) capture(ByCopy) -> !fir.ref<f32> {name = "a"}
+    %34 = omp.map.info var_ptr(%1 : !fir.ref<i32>, i32) map_clauses(implicit, exit_release_or_enter_alloc) capture(ByCopy) -> !fir.ref<i32> {name = ""}
+    %35 = omp.map.info var_ptr(%0 : !fir.ref<i32>, i32) map_clauses(implicit, exit_release_or_enter_alloc) capture(ByCopy) -> !fir.ref<i32> {name = ""}
+    omp.target host_eval(%c1_i32 -> %arg4, %23 -> %arg5, %c1_i32_1 -> %arg6 : i32, i32, i32) map_entries(%27 -> %arg7, %28 -> %arg8, %29 -> %arg9, %32 -> %arg10, %33 -> %arg11, %34 -> %arg12, %35 -> %arg13 : !fir.ref<!fir.array<?xf32>>, !fir.ref<i32>, !fir.ref<i32>, !fir.ref<!fir.array<?xf32>>, !fir.ref<f32>, !fir.ref<i32>, !fir.ref<i32>) {
+      %36 = fir.load %arg13 : !fir.ref<i32>
+      %37 = fir.load %arg12 : !fir.ref<i32>
+      %38 = fir.convert %37 : (i32) -> i64
+      %39 = fir.convert %36 : (i32) -> i64
+      %c0_6 = arith.constant 0 : index
+      %40 = fir.convert %39 : (i64) -> index
+      %41 = arith.cmpi sgt, %40, %c0_6 : index
+      %c0_7 = arith.constant 0 : index
+      %42 = fir.convert %38 : (i64) -> index
+      %43 = arith.cmpi sgt, %42, %c0_7 : index
+      %44 = arith.select %43, %42, %c0_7 : index
+      %45 = arith.select %41, %40, %c0_6 : index
+      %46 = fir.shape %45 : (index) -> !fir.shape<1>
+      %47:2 = hlfir.declare %arg7(%46) {uniq_name = "_QFsaxpyEx"} : (!fir.ref<!fir.array<?xf32>>, !fir.shape<1>) -> (!fir.box<!fir.array<?xf32>>, !fir.ref<!fir.array<?xf32>>)
+      %48:2 = hlfir.declare %arg8 {uniq_name = "_QFsaxpyEi"} : (!fir.ref<i32>) -> (!fir.ref<i32>, !fir.ref<i32>)
+      %49:2 = hlfir.declare %arg9 {uniq_name = "_QFsaxpyEn"} : (!fir.ref<i32>) -> (!fir.ref<i32>, !fir.ref<i32>)
+      %50 = fir.shape %44 : (index) -> !fir.shape<1>
+      %51:2 = hlfir.declare %arg10(%50) {uniq_name = "_QFsaxpyEy"} : (!fir.ref<!fir.array<?xf32>>, !fir.shape<1>) -> (!fir.box<!fir.array<?xf32>>, !fir.ref<!fir.array<?xf32>>)
+      %52:2 = hlfir.declare %arg11 {uniq_name = "_QFsaxpyEa"} : (!fir.ref<f32>) -> (!fir.ref<f32>, !fir.ref<f32>)
+      omp.teams {
+        omp.parallel private(@_QFsaxpyEi_private_i32 %48#0 -> %arg14 : !fir.ref<i32>) {
+          omp.distribute {
+            omp.wsloop {
+              omp.loop_nest (%arg15) : i32 = (%arg4) to (%arg5) inclusive step (%arg6) {
+                %53:2 = hlfir.declare %arg14 {uniq_name = "_QFsaxpyEi"} : (!fir.ref<i32>) -> (!fir.ref<i32>, !fir.ref<i32>)
+                hlfir.assign %arg15 to %53#0 : i32, !fir.ref<i32>
+                %54 = fir.load %52#0 : !fir.ref<f32>
+                %55 = fir.load %53#0 : !fir.ref<i32>
+                %56 = fir.convert %55 : (i32) -> i64
+                %57 = hlfir.designate %47#0 (%56)  : (!fir.box<!fir.array<?xf32>>, i64) -> !fir.ref<f32>
+                %58 = fir.load %57 : !fir.ref<f32>
+                %59 = arith.mulf %54, %58 fastmath<contract> : f32
+                %60 = fir.load %53#0 : !fir.ref<i32>
+                %61 = fir.convert %60 : (i32) -> i64
+                %62 = hlfir.designate %51#0 (%61)  : (!fir.box<!fir.array<?xf32>>, i64) -> !fir.ref<f32>
+                %63 = fir.load %62 : !fir.ref<f32>
+                %64 = arith.addf %59, %63 fastmath<contract> : f32
+                %65 = fir.load %53#0 : !fir.ref<i32>
+                %66 = fir.convert %65 : (i32) -> i64
+                %67 = hlfir.designate %51#0 (%66)  : (!fir.box<!fir.array<?xf32>>, i64) -> !fir.ref<f32>
+                hlfir.assign %64 to %67 : f32, !fir.ref<f32>
+                omp.yield
+              }
+            } {omp.composite}
+          } {omp.composite}
+          omp.terminator
+        } {omp.composite}
+        omp.terminator
+      }
+      omp.terminator
+    }
+    return
+  }
+  fir.global @_QMiso_fortran_env_implECreal32 constant : i32
+}
