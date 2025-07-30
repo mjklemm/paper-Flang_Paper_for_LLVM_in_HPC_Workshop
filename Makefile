@@ -1,5 +1,5 @@
 all:
-	latexmk -shell-escape -pdf paper.tex
+	texfot latexmk -shell-escape -pdf paper.tex
 
 clean:
 	latexmk -C -shell-escape -pdf paper.tex
