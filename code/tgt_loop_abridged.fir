@@ -11,11 +11,11 @@ func.func @_QPsaxpy(
     upper_bound(%27 : index) extent(%26#1 : index)
     stride(%26#2 : index) start_idx(%c1 : index)
     {stride_in_bytes = true}|\label{ln:SaxpyMapInfoXBoundsEnd}|
-  %29 = omp.map.info
+  %29 = omp.map.info|\label{ln:SaxpyMapInfoXStart}|
     var_ptr(%15:!fir.ref<!fir.array<?xf32>>, f32)
     map_clauses(to) capture(ByRef)|\label{ln:SaxpyMapInfoToExplicit}|
     bounds(%28) -> !fir.ref<!fir.array<?xf32>>
-    {name = "x"}
+    {name = "x"}|\label{ln:SaxpyMapInfoXEnd}|
   %30 = omp.map.info var_ptr(%5 : !fir.ref<i32>, i32)
     map_clauses(implicit, exit_release_or_enter_alloc)
     capture(ByCopy) -> !fir.ref<i32> {name = "i"}

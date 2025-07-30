@@ -64,10 +64,6 @@ style=acmnumeric, % use style=acmauthoryear for publications that require it
 \usepackage{xspace}
 \usepackage[printonlyused]{acronym}
 
-% Enabling the next line pushes all figures to the end the paper.
-% Michael will occasionally do that to check the page count.
-%\usepackage[nomarkers,figuresonly]{endfloat}
-
 %% Rights management information.  This information is sent to you
 %% when you complete the rights form.  These commands have SAMPLE
 %% values in them; it is your responsibility as an author to replace
@@ -239,7 +235,7 @@ proident, sunt in culpa qui officia deserunt mollit anim id est laborum.}
 \item Fortran standard supported by Flang
 \item OpenMP versions supported by Flang
 \item Implementations of features driven by request and usefulness, not by historic order.
-\item Flang shared the runtime infrastructure with Clang, same OpenMP implementation. 
+\item Flang shares the runtime infrastructure with Clang, same OpenMP implementation. 
 \end{itemize}
 }
 
@@ -282,7 +278,7 @@ The parse tree contains all details about OpenMP directives, clauses, etc. as no
 
 \begin{listing}[t]
 \inputminted{MLIR-lexer.py:MlirLexer -x}{code/tgt_loop_abridged.fir}
-\caption{Abridged intermediate representation of the Fortran code in Listing~\ref{lst:FortranExample} with \ac{FIR} and OpenMP \ac{MLIR} dialects.}
+\caption{Abridged intermediate representation of the Fortran code in Listing~\ref{lst:FortranExample} with \acs{FIR} and OpenMP \acs{MLIR} dialects.}
 \label{lst:FortranExampleFIR}
 \end{listing}
 
@@ -313,14 +309,14 @@ To generate code for device execution that adheres to the OpenMP semantics, the 
 \item link the individual object files with host and device code to produce the final executable.
 \end{itemize}
 
-We will provide an overview of the above steps in the remainder of this section.
+We will provide an overview of the above steps throughout the remainder of this section.
 
 \subsection{OpenMP Data Mapping Analysis}
 \label{sec:OpenMPDataMappingAnalysis}
 
 Each list item in a \code{map} clause is processed individually and generates an individual \code{map.info} operation in the intermediate representation. 
 The information specified by an explicit \code{map} clause is tracked by the operations \code{map\_clause} field that stores all relevant information about the mapped data. 
-For instance, the \code{map type modifier} \code{to} (see line~\ref{ln:SaxpyMapClause} of Listing~\ref{lst:FortranExampleFIR}) is reflected as \code{map\_clauses(to)} in line~\ref{ln:SaxpyMapInfoTo} in Listing~\ref{lst:FortranExampleFIR}. 
+For instance, the \textit{map-type} modifier \code{to} (see line~\ref{ln:SaxpyMapClause} of Listing~\ref{lst:FortranExampleFIR}) is reflected as \code{map\_clauses(to)} in lines~\ref{ln:SaxpyMapInfoXStart}--\ref{lnSaxpyMapInfoXEnd} in Listing~\ref{lst:FortranExampleFIR}. 
 The provided variable names (symbols), allow the compiler to gather the base address, type, and boundary data for the mapped data, populating the \code{var\_ptr} and \code{bounds} field of the operation. 
 The \code{capture} field for explicitly mapped data is set to always be by-reference for the moment.
 
@@ -351,11 +347,17 @@ In a later stage, the device binary code is embedded into the host code to creat
  
 % Possible TODO: Perhaps add a section going into a bit of detail about the Fortran PFT -> MLIR process, Sergio or Krzysztof may be best for this, but I can likely do a fairly brief summary of it if we wish to add something here
 
+\begin{listing}[t]
+\inputminted{MLIR-lexer.py:MlirLexer -x}{code/tgt_loop_abridged.ll}
+\caption{Abridged LLVM \ac{IR} of the Fortran code in Listing~\ref{lst:FortranExample} after lowering has been performed.}
+\label{lst:FortranExampleLLVMIR}
+\end{listing}
+
 To generate GPU code for \code{target} constructs, the compiler performs a process called outlining that extracts the code associated with a \code{target} construct into a separate function.
-The compiler then creates a device function for the outlined code by feeding outlined code into the code generator for the target device. 
-The outlined function is also processed by the code generator for the host to create the corresponding host version in case host fallback is needed.
-To keep track of the two code versions and for additional book keeping in the runtime system, the compiler creates an entry in a mapping table that associates the device function, host function, and a unique ID of the transformed \code{target} construct.
-At the original code location, the compiler then emits code to call the runtime entry point \code{\_\_tgt\_target\_kernel} to invoke the device.
+The compiler then creates a device function for the outlined code by feeding this outlined code into the code generator for the target device. 
+The outlined function is also processed by the code generator for the host to create the corresponding host version in case host fallback (Listing~\ref{lst:FortranExampleLLVMIR}, lines~\ref{ln:SaxpyLLVMIRHostStart}--~\ref{ln:SaxpyLLVMIRHostEnd}) is needed.
+For additional book keeping in the runtime system, the compiler creates a unique ID of the transformed \code{target} construct.
+At the original code location, the compiler then emits code to call the runtime entry point \code{\_\_tgt\_target\_kernel} to invoke the device (see Listing~\ref{lst:FortranExampleLLVMIR}, lines~\ref{ln:SaxpyLLVMIRInvokeStart}--\ref{ln:SaxpyLLVMIRInvokeEnd}).
 
 % In the former these functions become fallback functions, utilized if executing the device variant fails. 
 % In the latter case the function becomes a kernel which contains specialized code for the target device, which in our case is a \ac{GPU}. 
@@ -374,9 +376,8 @@ At the original code location, the compiler then emits code to call the runtime 
 % During the creation of the outlined kernel function from the \code{target} operation, an important consideration is how the list of \code{map.info} operations affects the kernel function on the device and the entry point on the host.
 
 To pass information about data transfers between the host and the device to the runtime library requires storing pointers, map type and size information in a runtime data structure. 
-This data structure is passed to the entry point of the \code{target} kernel, \code{\_\_tgt\_invoke\_kernel} (see Listing~\ref{lst:FortranExampleLLVM}, lines~\ref{bleh}--\ref{bleh}). 
+This data structure is passed (\code{\%kernel\_args} in Listing~\ref{lst:FortranExampleLLVMIR}) to the entry point of the \code{target} kernel.
 The data structure consists of a structure of arrays, in which array element corresponds to mapped object with information about base pointer, sizes, and flags for data movement, etc.
-Listing~\ref{lst:FortranExampleLLVM} exemplifies this for the symbols \code{x} and \code{a} in lines~\ref{bleh}--\ref{bleh}.
 The actual pointers to data that are used in the offloaded code are passed as pointer arguments to the outlined function.
 At runtime, the offload library implementation will process the mapping information passed and the outline function can access the mapped data via the passed pointers.
 
@@ -388,7 +389,8 @@ At runtime, the offload library implementation will process the mapping informat
 In addition to filling in the basic mapping information of variables, the compiler has to generate code to compute the size and offset of the data to mapped.
 This is needed whenever the size of a data object is not statically known at compile time.
 For instance, the compiler emits intermediate code to access the descriptor of arrays, read the dimensionality and the extent in each dimensions to compute the total number of array elements.
-In \code{FIR} this is reflected by the \code{omp.bounds} statement in lines~\ref{ln:SaxpyMapInfoXBoundsStart}--\ref{ln:SaxpyMapInfoXBoundsEnd} and lines~\ref{ln:SaxpyMapInfoYBoundsStart}--\ref{ln:SaxpyMapInfoYBoundsEnd} for the \code{x} and \code{y} arrays, respectively.
+In \code{FIR} this is reflected by the \code{omp.bounds} statement in lines~\ref{ln:SaxpyMapInfoXBoundsStart}--\ref{ln:SaxpyMapInfoXBoundsEnd} of Listing~\ref{lst:FortranExampleFIR} for \code{x}.
+In the lowered LLVM \ac{IR} code in Listing~\ref{lst:FortranExampleLLVMIR}, this corresponds to lines~\ref{ln:SaxyLLVMIRBoundsXStart}--\ref{ln:SaxyLLVMIRBoundsXStart}.
 
 % The calculation for the size of the data (in bytes) being mapped is trivial for non-arrays... . 
 % In the case of array types the boundary data provided by the \code{omp.bounds} operation must be factored in...
