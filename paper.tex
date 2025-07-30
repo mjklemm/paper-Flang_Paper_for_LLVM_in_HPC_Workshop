@@ -315,7 +315,7 @@ We will provide an overview of the above steps in the remainder of this section.
 
 Each entry in a \code{map} clause is processed individually and generates an individual \code{map.info} operation. 
 The information specified by an explicit \code{map} clause has all the information required to populate an \code{map.info} operation. 
-The OpenMP \code{map type modifier} (\code{to} in Listing~\ref{lst:FortranExampleFIR}) specified by the clause applies to each \code{map.info} generated, and is tracked by the operations \code{map\_clause} field. 
+The OpenMP \textit{map-type} modifier (\code{to} in Listing~\ref{lst:FortranExampleFIR}) specified by the clause applies to each \code{map.info} generated, and is tracked by the operations \code{map\_clause} field. 
 The provided variable names (symbols), allow the compiler to gather the base address, type and boundary data for the mapped data, populating the \code{var\_ptr} and \code{bounds} field of the operation. 
 The \code{capture} field for explicitly mapped data is set to always be by reference for the moment.
 
@@ -404,7 +404,7 @@ As we may not have the boundary data as a compile time constant, the compiler ha
 
 \section{Compiler transformations to and between OpenMP constructs}
 
-As mentioned in Section \ref{sec:LLVMFlangCompiler}, the LLVM flang compiler models Fortran programs using a mix of the \ac{FIR}, \ac{HLFIR}, OpenMP \ac{MLIR} dialects.
+As mentioned in Section \ref{sec:LLVMFlangCompiler}, the LLVM Flang compiler models Fortran programs using a mix of the \ac{FIR}, \ac{HLFIR}, OpenMP \ac{MLIR} dialects.
 Different parts of the program are modeled using different dialects; e.g. the OpenMP directives and clauses are modeled using operations from the OpenMP dialect.
 Additionally, the \ac{MLIR} infrastructure enables (partially) rewriting or transforming the IR internally throughout the compiler pipeline.
 This rewriting can take place within the same dialect; i.e. the compiler rewrites a certain program construct using different operation(s) from the same dialect (e.g. OpenMP to OpenMP transformations).
