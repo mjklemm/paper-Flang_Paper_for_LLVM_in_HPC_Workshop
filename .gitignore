@@ -26,3 +26,5 @@ paper.ps
 *.sublime-workspace
 *.swp
 *.swo
+.nfs*
+_minted-paper
