@@ -89,6 +89,7 @@ style=acmnumeric, % use style=acmauthoryear for publications that require it
   captionpos=b,
 }
 \setminted{
+  escapeinside=||,
   fontsize=\small,
   baselinestretch=0.8,
   linenos,
@@ -315,7 +316,7 @@ We will provide an overview of the above steps in the remainder of this section.
 
 Each entry in a \code{map} clause is processed individually and generates an individual \code{map.info} operation. 
 The information specified by an explicit \code{map} clause has all the information required to populate an \code{map.info} operation. 
-The OpenMP \code{map type modifier} (\code{to} in Listing~\ref{lst:FortranExampleFIR}) specified by the clause applies to each \code{map.info} generated, and is tracked by the operations \code{map\_clause} field. 
+The OpenMP \code{map type modifier} (\code{to} in Line~\ref{ln:SaxpyMapClause} in Listing~\ref{lst:FortranExampleFIR}) specified by the clause applies to each \code{map.info} generated, and is tracked by the operations \code{map\_clause} field. 
 The provided variable names (symbols), allow the compiler to gather the base address, type and boundary data for the mapped data, populating the \code{var\_ptr} and \code{bounds} field of the operation. 
 The \code{capture} field for explicitly mapped data is set to always be by reference for the moment.
 

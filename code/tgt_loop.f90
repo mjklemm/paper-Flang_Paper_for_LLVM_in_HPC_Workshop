@@ -6,7 +6,7 @@ subroutine saxpy(x, y, a, n)
     real(kind=rt) :: a
     integer :: n
     integer :: i
-    !$omp target teams loop map(to:x)
+    !$omp target teams loop map(to:x)|\label{ln:SaxpyMapClause}|
     do i = 1, n
         y(i) = a * x(i) + y(i) 
     end do
