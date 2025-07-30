@@ -48,6 +48,7 @@
 %% -> Description of Fortran runtime
 %%  -> Examples of Fortran code where Fortran runtime is used
 %%  -> Consequences of Fortran runtime call inside GPU kernel (are we allowed to present some execution times?)
+
 \documentclass[acmtog,natbib=false]{acmart}
 \AtBeginDocument{\providecommand\BibTeX{{Bib\TeX}}}
 
@@ -232,7 +233,7 @@ proident, sunt in culpa qui officia deserunt mollit anim id est laborum.}
 \section{Introduction}
 \label{sec:Introduction}
 \todo{Michael: Write the introduction part}
-
+\todo{Overall comment about }
 \todo{
 \begin{itemize}
 \item Fortran standard supported by Flang
@@ -296,6 +297,8 @@ Through these additional elements, the intermediate representation contains expl
 For instance, \code{DO} loop nest is associated with the corresponding OpenMP \code{target teams loop} construct (see Listing~\ref{lst:FortranExampleFIR}).
 Finally, the \ac{MLIR} code is transformed into regular LLVM \ac{IR} and is passed to the compiler back-end for target code generation.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{OpenMP Code Generation}
 \label{sec:OpenMPCodeGen}
@@ -314,31 +317,26 @@ We will provide an overview of the above steps in the remainder of this section.
 \subsection{OpenMP Data Mapping Analysis}
 \label{sec:OpenMPDataMappingAnalysis}
 
-Each entry in a \code{map} clause is processed individually and generates an individual \code{map.info} operation. 
-The information specified by an explicit \code{map} clause has all the information required to populate an \code{map.info} operation. 
-The OpenMP \code{map type modifier} (\code{to} in Line~\ref{ln:SaxpyMapClause} in Listing~\ref{lst:FortranExampleFIR}) specified by the clause applies to each \code{map.info} generated, and is tracked by the operations \code{map\_clause} field. 
-The provided variable names (symbols), allow the compiler to gather the base address, type and boundary data for the mapped data, populating the \code{var\_ptr} and \code{bounds} field of the operation. 
-The \code{capture} field for explicitly mapped data is set to always be by reference for the moment.
+Each list item in a \code{map} clause is processed individually and generates an individual \code{map.info} operation in the intermediate representation. 
+The information specified by an explicit \code{map} clause is tracked by the operations \code{map\_clause} field that stores all relevant information about the mapped data. 
+For instance, the \code{map type modifier} \code{to} (see line~\ref{ln:SaxpyMapClause} of Listing~\ref{lst:FortranExampleFIR}) is reflected as \code{map\_clauses(to)} in line~\ref{ln:SaxpyMapInfoTo} in Listing~\ref{lst:FortranExampleFIR}. 
+The provided variable names (symbols), allow the compiler to gather the base address, type, and boundary data for the mapped data, populating the \code{var\_ptr} and \code{bounds} field of the operation. 
+The \code{capture} field for explicitly mapped data is set to always be by-reference for the moment.
 
-In Listing~\ref{lst:FortranExample} it can be seen that there is variables referenced within the \code{target} region and not within a \code{map} clause. 
-This information is still required on the device for the correct execution of the kernel, and it is up to the compiler to gather and implicitly generate \code{map.info} operations for these, in an action known as capturing. 
-The OpenMP specification~\cite{OARB24} defines rules for how these variables should be handled by the compiler and runtime, which LLVM Flang adheres to. 
+In Listing~\ref{lst:FortranExample}
+, it can be seen that there are variables that are referenced within the \code{target} region and that do not have a corresponding \code{map} clause (e.g., \code{y} and \code{a})
+As per the OpenMP specification~\cite{OARB24}, these variables are subject to implicit data mapping.
+The compiler must analyze the code and create \code{map.info} operations for these to capture the data for mapping operations. 
+In Listing~\ref{lst:FortranExampleFIR}, the example implicit maps are in lines~\ref{ln:SaxpyMapInfoImplicitStart}--\ref{ln:SaxpyMapInfoImplicitEnd} with the \code{map\_clauses(implicit, ...)} attribute.
+The capturing of variables occurs during the initial lowering of the \code{target} node after all present clauses have been processed, including any \code{map} clauses. 
+At this stage the compiler has knowledge of what symbols have already been mapped to the device by the various OpenMP data movement clauses.
 
-The capturing of variables occurs during the initial lowering of the \code{target} node, after all of its attached clauses have been processed; including the \code{map} clause. 
-At this stage the compiler has knowledge of what symbols have already been mapped to device by the varying data movement clauses and can proceed with creation of \code{map.info} operations for the remaining unmapped data.
-
-The compiler visits all of the symbols referenced within the \code{target} region and verifies if they already appear in a \code{map.info} operation. 
-If the symbol does not yet appear in a \code{map.info} operation, the compiler begins the process of generating one. 
-This process is similar to the explicit case, as the compiler has access to the symbol and can retrieve the relevant data to populate the operation. 
-The main difference is that the compiler must make assumptions about the \code{map\_type}, which in the explicit case is specified by the user on the \code{map} clause. 
-The aforementioned OpenMP rules dictate how the compiler selects the \code{map\_type} and \code{capture} fields. 
-For example, scalar data types are to be treated as if they were specified in an OpenMP \code{firstprivate} clause; effectively making them pass by copy, giving them a \code{map\_type} field of \code{to} and a \code{capture} field of \code{ByCopy}. 
-Whereas, array data types are treated as if they appeared in a \code{map} clause with a \code{map\_type} of \code{tofrom}. 
-The compiler primarily introspects the symbols type to detect which rule the data falls into.
-
-At this point all of the data used within the \code{target} region should be associated with a relevant \code{map.info} operation and they can be attached to the \code{target} operations \code{map\_entries} field. 
-In Listing~\ref{lst:FortranExample} we have an implicit scalar capture of \code{a}, an implicit array capture of \code{y} and explicit map of \code{x}. 
-The Listing~\ref{lst:FortranExampleFIR} showcases the resulting \code{map.info} operations generated by the compiler using the above process.
+To generate the \code{map.info} operation for a symbol, the compiler visits all of the symbols referenced within the \code{target} region and determines if they already appear in a \code{map.info} operation (due to an explicit \code{map} clause or another code{map.info} generating clause). 
+If not, the compiler begins the process of generating one, similar to what it it would do for an explicit \code{map} clause.
+The main difference is that the compiler must infer the correct \code{map\_type}, which in the explicit case is specified by the user on the \code{map} clause; in the implicit case it is the specified default behavior as per the OpenMP specification.
+For example, Fortran arrays are treated as if they appeared in a \code{map} clause with a \code{map\_type} of \code{tofrom} (see Listing~\ref{lst:FortranExampleFIR}, lines~\ref{ln:SaxpyMapInfoImplicitArrayStart}--\ref{ln:SaxpyMapInfoImplicitArrayEnd}).
+Fortran scalar data is treated as if they were specified with \code{map(to:...)} and a \code{firstprivate} clause.
+This can be viewed as pass-by-copy, which results in giving them a \code{map\_type} of \code{to} and a \code{capture} field of \code{ByCopy} (see Listing~\ref{lst:FortranExampleFIR}, lines~\ref{ln:SaxpyMapInfoImplicitScalarStart}--\ref{ln:SaxpyMapInfoImplicitScalarEnd}). 
 
 \subsection{Function Outlining}
 \label{sec:FunctionOutlining}
@@ -372,24 +370,28 @@ At the original code location, the compiler then emits code to call the runtime 
 \subsection{Handling Data Mapping}
 \label{sec:HandlingDataMapping}
 
-During the creation of the outlined kernel function from the \code{target} operation, an important consideration is how the list of \code{map.info} operations affects the kernel function on the device and the entry point on the host.
+% During the creation of the outlined kernel function from the \code{target} operation, an important consideration is how the list of \code{map.info} operations affects the kernel function on the device and the entry point on the host.
 
-Communicating the required data transfers between host and device to the OpenMP runtime requires the host pass of the compiler to populate a runtime data structure containing the \code{target} kernels map information. 
-This data structure is passed to the entry point of the \code{target} kernel. 
-The data structure is a structure of arrays, in which for the main members of interest each element belongs to an individual data entry. 
-The necessary arrays for mapping that the compiler populates at this stage provide the map type, sizes, base pointers and offload pointers of map entries to the runtime. 
+To pass information about data transfers between the host and the device to the runtime library requires storing pointers, map type and size information in a runtime data structure. 
+This data structure is passed to the entry point of the \code{target} kernel, \code{\_\_tgt\_invoke\_kernel} (see Listing~\ref{lst:FortranExampleLLVM}, lines~\ref{bleh}--\ref{bleh}). 
+The data structure consists of a structure of arrays, in which array element corresponds to mapped object with information about base pointer, sizes, and flags for data movement, etc.
+Listing~\ref{lst:FortranExampleLLVM} exemplifies this for the symbols \code{x} and \code{a} in lines~\ref{bleh}--\ref{bleh}.
+The actual pointers to data that are used in the offloaded code are passed as pointer arguments to the outlined function.
+At runtime, the offload library implementation will process the mapping information passed and the outline function can access the mapped data via the passed pointers.
 
-For the device, when a kernel function is outlined, the \code{map.info} operations tied to the \code{target} operation help to define the functions parameter list. 
-The gathered map information also determines which instructions are required to access each of the kernel arguments to adhere to the OpenMP specifications data mapping rules.
+% During the \ac{MLIR} to LLVM \ac{IR} lowering of the \code{target} operation; prior to the generation of the kernel or entry point, the compiler gathers information from the \code{map.info} necessary for lowering of the kernel for each compiler pass. 
+% The \code{map.info} operation conveys the minimum necessary information for this stage of the lowering, each pass still must perform some processing to meet the aforementioned requirements. 
 
-During the \ac{MLIR} to LLVM \ac{IR} lowering of the \code{target} operation; prior to the generation of the kernel or entry point, the compiler gathers information from the \code{map.info} necessary for lowering of the kernel for each compiler pass. 
-The \code{map.info} operation conveys the minimum necessary information for this stage of the lowering, each pass still must perform some processing to meet the aforementioned requirements. 
+% Populating the kernel argument data structure, requires the host pass calculates the size of data to be mapped, any possible offsets or required intermediate accesses the pointer fields may have and to compute the final map type. 
 
-Populating the kernel argument data structure, requires the host pass calculates the size of data to be mapped, any possible offsets or required intermediate accesses the pointer fields may have and to compute the final map type. 
+In addition to filling in the basic mapping information of variables, the compiler has to generate code to compute the size and offset of the data to mapped.
+This is needed whenever the size of a data object is not statically known at compile time.
+For instance, the compiler emits intermediate code to access the descriptor of arrays, read the dimensionality and the extent in each dimensions to compute the total number of array elements.
+In \code{FIR} this is reflected by the \code{omp.bounds} statement in lines~\ref{ln:SaxpyMapInfoXBoundsStart}--\ref{ln:SaxpyMapInfoXBoundsEnd} and lines~\ref{ln:SaxpyMapInfoYBoundsStart}--\ref{ln:SaxpyMapInfoYBoundsEnd} for the \code{x} and \code{y} arrays, respectively.
 
-The calculation for the size of the data (in bytes) being mapped is trivial for non-arrays... . 
-In the case of array types the boundary data provided by the \code{omp.bounds} operation must be factored in...
-As we may not have the boundary data as a compile time constant, the compiler has to emit the instructions for the calculation and then insert the result to the data structure.
+% The calculation for the size of the data (in bytes) being mapped is trivial for non-arrays... . 
+% In the case of array types the boundary data provided by the \code{omp.bounds} operation must be factored in...
+% As we may not have the boundary data as a compile time constant, the compiler has to emit the instructions for the calculation and then insert the result to the data structure.
 
 % Host: bit more detail on how it is done ... retrieve all map info, calculate size from type + bounds, calculate relevant offsets and apply to the base address when we're provided a slice, modify map type with relevant bits in certain cases but can mostly gloss over this and say it's a bitshift of all the specified maps with some minor runtime/lower level/situation specific flags, create parent <-> child relationships... maybe leave that out though it's a bit complicated and we don't really cover it in our example. Intermediate access above mainly referring to the ByRef/ByCopy semantics we carried over from Clang that the runtime requires
 
@@ -509,6 +511,10 @@ To perform this transformation, the compiler checks the surrounding context of t
 \subsection{Transforming the OpenMP \code{reduction} clause}
 \label{sec:OpenMPReduction}
 
+\subsection{Handling Fortran arrays}
+\subsection{Comparison of the generated code by Clang and Flang}
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -519,7 +525,6 @@ To perform this transformation, the compiler checks the surrounding context of t
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 
 \section*{Acknowledgments}
 Copyright 2025 Advanced Micro Devices, Inc.
