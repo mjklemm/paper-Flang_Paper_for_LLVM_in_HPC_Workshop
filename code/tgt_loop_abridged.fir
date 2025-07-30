@@ -1,10 +1,10 @@
 func.func @_QPsaxpy(
   %arg0: !fir.ref<!fir.array<?xf32>>
-          {fir.bindc_name = "x"},
+         {fir.bindc_name = "x"},
   %arg1: !fir.ref<!fir.array<?xf32>>
          {fir.bindc_name = "y"},
   %arg2: !fir.ref<f32> {fir.bindc_name = "a"},
-  %arg3: !fir.ref<i32> {fir.bindc_name = "n"}\
+  %arg3: !fir.ref<i32> {fir.bindc_name = "n"}
 ) {
   [...]
   %29 = omp.map.info
