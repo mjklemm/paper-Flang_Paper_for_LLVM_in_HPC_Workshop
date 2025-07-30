@@ -42,12 +42,11 @@ omp.target map_entries(%s -> %arg0, %i -> %arg1, %a -> %arg2 : !fir.ref<f64>, !f
     omp.terminator
   }
   omp.terminator
-   }
-    %c6_i32 = arith.constant 6 : i32
-    %13 = fir.address_of(@_QQclX22f96cf2a9392db1eb35faed89390075) : !fir.ref<!fir.char<1,64>>
-    %14 = fir.convert %13 : (!fir.ref<!fir.char<1,64>>) -> !fir.ref<i8>
-    %c9_i32 = arith.constant 9 : i32
-    %15 = fir.undefined !fir.ref<i8>
-    %16 = fir.load %7#0 : !fir.ref<f64>
-    return
 }
+ %c6_i32 = arith.constant 6 : i32
+%13 = fir.address_of(@_QQclX22f96cf2a9392db1eb35faed89390075) : !fir.ref<!fir.char<1,64>>
+%14 = fir.convert %13 : (!fir.ref<!fir.char<1,64>>) -> !fir.ref<i8>
+%c9_i32 = arith.constant 9 : i32
+%15 = fir.undefined !fir.ref<i8>
+%16 = fir.load %7#0 : !fir.ref<f64>
+return
