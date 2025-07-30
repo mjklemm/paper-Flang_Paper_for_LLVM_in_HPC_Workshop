@@ -316,7 +316,7 @@ We will provide an overview of the above steps throughout the remainder of this 
 
 Each list item in a \code{map} clause is processed individually and generates an individual \code{map.info} operation in the intermediate representation. 
 The information specified by an explicit \code{map} clause is tracked by the operations \code{map\_clause} field that stores all relevant information about the mapped data. 
-For instance, the \textit{map-type} modifier \code{to} (see line~\ref{ln:SaxpyMapClause} of Listing~\ref{lst:FortranExampleFIR}) is reflected as \code{map\_clauses(to)} in lines~\ref{ln:SaxpyMapInfoXStart}--\ref{lnSaxpyMapInfoXEnd} in Listing~\ref{lst:FortranExampleFIR}. 
+For instance, the \textit{map-type} modifier \code{to} (see line~\ref{ln:SaxpyMapClause} of Listing~\ref{lst:FortranExampleFIR}) is reflected as \code{map\_clauses(to)} in lines~\ref{ln:SaxpyMapInfoXStart}--\ref{ln:SaxpyMapInfoXEnd} in Listing~\ref{lst:FortranExampleFIR}.
 The provided variable names (symbols), allow the compiler to gather the base address, type, and boundary data for the mapped data, populating the \code{var\_ptr} and \code{bounds} field of the operation. 
 The \code{capture} field for explicitly mapped data is set to always be by-reference for the moment.
 
