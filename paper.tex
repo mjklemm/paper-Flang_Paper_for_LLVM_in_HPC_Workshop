@@ -406,8 +406,8 @@ Different parts of the program are modeled using different dialects; e.g. the Op
 Additionally, the \ac{MLIR} infrastructure enables (partially) rewriting or transforming the IR internally throughout the compiler pipeline.
 This rewriting can take place within the same dialect; i.e. the compiler rewrites a certain program construct using different operation(s) from the same dialect (e.g. OpenMP to OpenMP transformations).
 The compiler can also rewrite a program construct using operations from a different dialect (e.g. \ac{FIR} to OpenMP transformations).
-In the following subsections, two such transformations are demonstrated.
-Both of these transformations are currently implemented by the LLVM flang compiler.
+In the following subsections, examples of such transformations are demonstrated.
+All of these transformations are currently implemented by the LLVM flang compiler.
 
 \subsection{Automatically parallelizing \code{do concurrent} loops}
 
@@ -460,8 +460,45 @@ Results of automatically parallelizing \code{DO CONCURRENT} on the CPU were repo
 
 \subsection{Transforming the OpenMP \code{loop} directive}
 
-\subsection{Transforming the OpenMP \code{reduction} clause}
+\begin{listing}[t]
+\inputminted{Fortran}{code/loop_dir_reduction.f90}
+\caption{Example Fortran code with the OpenMP \code{loop} directive.}
+\label{lst:LoopDirExample}
+\end{listing}
 
+\begin{listing}[t]
+\inputminted{MLIR-lexer.py:MlirLexer -x}{code/loop_dir_reduction.mlir}
+\caption{Listing~\ref{lst:LoopDirExample} after initial lowering to MLIR.}
+\label{lst:LoopDirMLIRExample}
+\end{listing}
+
+\begin{listing}[t]
+\inputminted{MLIR-lexer.py:MlirLexer -x}{code/loop_dir_simd.mlir}
+\caption{Listing~\ref{lst:LoopDirMLIRExample} after lowering to \code{simd}.}
+\label{lst:LoopDirSIMDExample}
+\end{listing}
+
+An OpenMP \code{loop} construct specifies that the logical iterations of the associated loops may execute concurrently~\cite{OARB21}.
+The actual mapping/distribution of the associated loop's iterations across hardware resources depends on the region in which the \code{loop} directive is nested.
+The OpenMP specification provides three possible mappings of a \code{loop} directive:
+\begin{itemize}
+    \item When the binding region is a \code{teams} one, the loop's iterations are executed by the \textbf{primary threads} that execute the \code{teams} region.
+    \item When the binding region is a \code{parallel} one, the loop's iterations are executed by the team of threads in the \code{parallel} region.
+    \item Otherwise, the loop is executed by a single thread.
+\end{itemize}
+During the initial stages of the compiler pipeline, the context (or binding region) of \code{loop} directives is ignored.
+A \code{loop} directive is always emitted as a \code{omp.loop} operation from the OpenMP MLIR dialect (see Listings \ref{lst:LoopDirExample} \& \ref{lst:LoopDirMLIRExample}).
+For brevity, describing the \code{private()} clause attached to the \code{omp.loop} directive is ignored; the \code{reduction()} clause is discussion in Section \ref{sec:OpenMPReduction}
+
+Starting from the bottom item in the above list since it is the simplest case; \code{loop} directives could be simply serialized.
+However, the LLVM flang compiler takes this a step further by converting \code{loop} directives in this case to corresponding OpenMP \code{simd} constructs (see Listing \ref{lst:LoopDirSIMDExample}).
+The compiler (1) creates a new \code{omp.simd} MLIR operation, (2) transfers the loop's body and attached clauses (i.e. \code{private} and \code{reduction} to the new operation, and (3) deletes the original \code{omp.loop} operation.
+
+Binding the \code{loop} directive to a \code{parallel}; e.g. through nesting the \code{loop} directive tightly inside a \code{parallel} directive, results in different handling of the \code{omp.loop} op by the compiler.
+Listing \ref{lst:LoopDirWSExample} demonstrates this scenario where the same \code{omp.loop} in \ref{lst:LoopDirMLIRExample} is now mapped to an \code{omp.wsloop} (i.e. a work-sharing loop) operation.
+
+\subsection{Transforming the OpenMP \code{reduction} clause}
+\label{sec:OpenMPReduction}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
