@@ -11,7 +11,7 @@ omp.declare_reduction @add_reduction_f64 : f64 init {
 func.func @_QQmain() attributes {fir.bindc_name = "reduction", omp.declare_target = #omp.declaretarget<device_type = (host), capture_clause = (to)>} {
     %11 = omp.map.bounds lower_bound(%c0 : index) upper_bound(%10 : index) extent(%c10000 : index) stride(%c1 : index) start_idx(%c1 : index)
     %12 = omp.map.info var_ptr(%3#1 : !fir.ref<!fir.array<10000xf64>>, !fir.array<10000xf64>) map_clauses(implicit, tofrom) capture(ByRef) bounds(%11) -> !fir.ref<!fir.array<10000xf64>> {name = "a"}
-    omp.target map_entries(%8 -> %arg0, %9 -> %arg1, %12 -> %arg2 : !fir.ref<f64>, !fir.ref<i32>, !fir.ref<!fir.array<10000xf64>>) {
+    omp.target map_entries(%s -> %arg0, %i -> %arg1, %12 -> %arg2 : !fir.ref<f64>, !fir.ref<i32>, !fir.ref<!fir.array<10000xf64>>) {
       %c10000_0 = arith.constant 10000 : index
       %17:2 = hlfir.declare %arg0 {uniq_name = "_QFEs"} : (!fir.ref<f64>) -> (!fir.ref<f64>, !fir.ref<f64>)
       %18:2 = hlfir.declare %arg1 {uniq_name = "_QFEi"} : (!fir.ref<i32>) -> (!fir.ref<i32>, !fir.ref<i32>)
