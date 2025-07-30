@@ -59,6 +59,7 @@ style=acmnumeric, % use style=acmauthoryear for publications that require it
 
 \usepackage[T1]{fontenc}
 \usepackage{listings}
+\usepackage{minted}
 \usepackage{xspace}
 \usepackage[printonlyused]{acronym}
 
@@ -250,19 +251,23 @@ AMD plans to make this the new production compiler that will ship with a future 
 \caption{Simplified overview of the compiler phases in the AMD Next-Gen Fortran Compiler front-end.\label{fig:FlangCompilerPhases}}
 \end{figure}
 
-\begin{figure}[t]
-\lstinputlisting[language=Fortran,
-                caption={Example Fortran code with \code{!\$omp target teams loop} construct and \code{map} clauses},
-                label={lst:FortranExample}]
-                {code/tgt_loop.f90}
-\end{figure}
+% \begin{figure}[t]
+\begin{listing}[t]
+% \lstinputlisting[language=Fortran,
+%                 caption={Example Fortran code with \code{!\$omp target teams loop} construct and \code{map} clauses},
+%                 label={lst:FortranExample}]
+%                 {code/tgt_loop.f90}
+\inputminted{Fortran}{code/tgt_loop.f90}
+% \end{figure}
+\end{listing}
 
-\begin{figure}[t]
-\lstinputlisting[%language=Fortran,
-                caption={Fortran code of Listing~\ref{lst:FortranExample} after preprocessing and prescanning.},
-                label={lst:FortranExampleCooked}]
-                {code/tgt_loop_cooked.f90}
-\end{figure}
+\begin{listing}[t]
+% \lstinputlisting[%language=Fortran,
+%                 caption={Fortran code of Listing~\ref{lst:FortranExample} after preprocessing and prescanning.},
+%                 label={lst:FortranExampleCooked}]
+%                 {code/tgt_loop_cooked.f90}
+\inputminted{Fortran}{code/tgt_loop_cooked.f90}
+\end{listing}
 
 Figure~\ref{fig:FlangCompilerPhases} shows a simplified overview of the compiler pipeline of the LLVM Flang compiler frontend up to LLVM \ac{IR} generation.
 The same stages are also used by the AMD Next-Gen Fortran Compiler front-end.
@@ -272,12 +277,13 @@ Compiler directives such as \code{!\$dir} and the OpenMP directives introduced w
 The parser and semantic analysis stages then construct a parse tree of the processed Fortran code and annotate it with semantic information (e.g., data types).
 The parse tree contains all details about OpenMP directives, clauses, etc. as nodes in the tree.
 
-\begin{figure}[t]
-\lstinputlisting[%language=Fortran,
-                caption={Abridged intermediate representation of the Fortran code in Listing~\ref{lst:FortranExample} with \ac{FIR} and OpenMP \ac{MLIR} dialects.},
-                label={lst:FortranExampleFIR}]
-                {code/tgt_loop_abridged.fir}
-\end{figure}
+\begin{listing}[t]
+% \lstinputlisting[%language=Fortran,
+%                 caption={Abridged intermediate representation of the Fortran code in Listing~\ref{lst:FortranExample} with \ac{FIR} and OpenMP \ac{MLIR} dialects.},
+%                 label={lst:FortranExampleFIR}]
+%                 {code/tgt_loop_abridged.fir}
+\inputminted{Text}{code/tgt_loop_abridged.fir}
+\end{listing}
 
 The parse tree is then gradually lowered into different levels of intermediate representation, depending on the needs of the applied transformation and optimization passes.
 
@@ -410,33 +416,37 @@ Both of these transformations are currently implemented by the LLVM flang compil
 
 \subsection{Automatically parallelizing \code{do concurrent} loops}
 
-\begin{figure}[t]
-\lstinputlisting[language=Fortran,
-                caption={Example Fortran code with \code{do concurrent} loop},
-                label={lst:DCExample}]
-                {code/dc_saxpy.f90}
-\end{figure}
+\begin{listing}[t]
+% \lstinputlisting[language=Fortran,
+%                 caption={Example Fortran code with \code{do concurrent} loop},
+%                 label={lst:DCExample}]
+%                 {code/dc_saxpy.f90}
+\inputminted{Fortran}{code/dc_saxpy.f90}
+\end{listing}
 
-\begin{figure}[t]
-\lstinputlisting[%language=Fortran,
-                caption={Listing~\ref{lst:DCExample} after lowering to \ac{FIR} and \ac{HLFIR} dialects},
-                label={lst:DCFIRExample}]
-                {code/dc_fir.mlir}
-\end{figure}
+\begin{listing}[t]
+% \lstinputlisting[%language=Fortran,
+                % caption={Listing~\ref{lst:DCExample} after lowering to \ac{FIR} and \ac{HLFIR} dialects},
+                % label={lst:DCFIRExample}]
+                % {code/dc_fir.mlir}
+\inputminted{Text}{code/dc_fir.mlir}
+\end{listing}
 
-\begin{figure}[t]
-\lstinputlisting[%language=Fortran,
-                caption={Listing~\ref{lst:DCFIRExample} after lowering to OpenMP on the CPU},
-                label={lst:DCOMPExample}]
-                {code/dc_omp.mlir}
-\end{figure}
+\begin{listing}[t]
+% \lstinputlisting[%language=Fortran,
+                % caption={Listing~\ref{lst:DCFIRExample} after lowering to OpenMP on the CPU},
+                % label={lst:DCOMPExample}]
+                % {code/dc_omp.mlir}
+\inputminted{Text}{code/dc_omp.mlir}
+\end{listing}
 
-\begin{figure}[t]
-\lstinputlisting[%language=Fortran,
-                caption={Listing~\ref{lst:DCFIRExample} after lowering to OpenMP on the GPU},
-                label={lst:DCOMPDeviceExample}]
-                {code/dc_omp_device.mlir}
-\end{figure}
+\begin{listing}[t]
+% \lstinputlisting[%language=Fortran,
+                % caption={Listing~\ref{lst:DCFIRExample} after lowering to OpenMP on the GPU},
+                % label={lst:DCOMPDeviceExample}]
+                % {code/dc_omp_device.mlir}
+\inputminted{Text}{code/dc_omp_device.mlir}
+\end{listing}
 
 Fortran's \code{DO CONCURRENT}~\cite{F2023} construct allows users to write loops whose iterations can be executed in indeterminate order.
 Using \code{DO CONCURRENT} loops, a programmer can express to the compiler which parts of the program could possibly run in parallel.
