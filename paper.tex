@@ -405,7 +405,7 @@ As we may not have the boundary data as a compile time constant, the compiler ha
 
 \section{Compiler transformations to and between OpenMP constructs}
 
-As mentioned in Section \ref{sec:LLVMFlangCompiler}, the LLVM flang compiler models Fortran programs using a mix of the \ac{FIR}, \ac{HLFIR}, OpenMP \ac{MLIR} dialects.
+As mentioned in Section \ref{sec:LLVMFlangCompiler}, the LLVM Flang compiler models Fortran programs using a mix of the \ac{FIR}, \ac{HLFIR}, OpenMP \ac{MLIR} dialects.
 Different parts of the program are modeled using different dialects; e.g. the OpenMP directives and clauses are modeled using operations from the OpenMP dialect.
 Additionally, the \ac{MLIR} infrastructure enables (partially) rewriting or transforming the IR internally throughout the compiler pipeline.
 This rewriting can take place within the same dialect; i.e. the compiler rewrites a certain program construct using different operation(s) from the same dialect (e.g. OpenMP to OpenMP transformations).

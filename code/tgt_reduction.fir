@@ -11,40 +11,48 @@ module attributes {dlti.dl_spec = #dlti.dl_spec<!llvm.ptr = dense<64> : vector<4
   }
   func.func @_QQmain() attributes {fir.bindc_name = "reduction", omp.declare_target = #omp.declaretarget<device_type = (host), capture_clause = (to)>} {
     %0 = fir.dummy_scope : !fir.dscope
-    %1 = fir.alloca i32 {bindc_name = "i", uniq_name = "_QFEi"}
-    %2:2 = hlfir.declare %1 {uniq_name = "_QFEi"} : (!fir.ref<i32>) -> (!fir.ref<i32>, !fir.ref<i32>)
-    %3 = fir.alloca i32 {bindc_name = "n", uniq_name = "_QFEn"}
-    %4:2 = hlfir.declare %3 {uniq_name = "_QFEn"} : (!fir.ref<i32>) -> (!fir.ref<i32>, !fir.ref<i32>)
-    %5 = fir.alloca f64 {bindc_name = "s", uniq_name = "_QFEs"}
-    %6:2 = hlfir.declare %5 {uniq_name = "_QFEs"} : (!fir.ref<f64>) -> (!fir.ref<f64>, !fir.ref<f64>)
-    %c10000_i32 = arith.constant 10000 : i32
-    hlfir.assign %c10000_i32 to %4#0 : i32, !fir.ref<i32>
+    %1 = fir.address_of(@_QFEa) : !fir.ref<!fir.array<10000xf64>>
+    %c10000 = arith.constant 10000 : index
+    %2 = fir.shape %c10000 : (index) -> !fir.shape<1>
+    %3:2 = hlfir.declare %1(%2) {uniq_name = "_QFEa"} : (!fir.ref<!fir.array<10000xf64>>, !fir.shape<1>) -> (!fir.ref<!fir.array<10000xf64>>, !fir.ref<!fir.array<10000xf64>>)
+    %4 = fir.alloca i32 {bindc_name = "i", uniq_name = "_QFEi"}
+    %5:2 = hlfir.declare %4 {uniq_name = "_QFEi"} : (!fir.ref<i32>) -> (!fir.ref<i32>, !fir.ref<i32>)
+    %6 = fir.alloca f64 {bindc_name = "s", uniq_name = "_QFEs"}
+    %7:2 = hlfir.declare %6 {uniq_name = "_QFEs"} : (!fir.ref<f64>) -> (!fir.ref<f64>, !fir.ref<f64>)
     %cst = arith.constant 0.000000e+00 : f64
-    hlfir.assign %cst to %6#0 : f64, !fir.ref<f64>
-    %7 = omp.map.info var_ptr(%6#1 : !fir.ref<f64>, f64) map_clauses(tofrom) capture(ByRef) -> !fir.ref<f64> {name = "s"}
-    %8 = omp.map.info var_ptr(%2#1 : !fir.ref<i32>, i32) map_clauses(implicit, exit_release_or_enter_alloc) capture(ByCopy) -> !fir.ref<i32> {name = "i"}
-    %9 = omp.map.info var_ptr(%4#1 : !fir.ref<i32>, i32) map_clauses(implicit, exit_release_or_enter_alloc) capture(ByCopy) -> !fir.ref<i32> {name = "n"}
-    omp.target map_entries(%7 -> %arg0, %8 -> %arg1, %9 -> %arg2 : !fir.ref<f64>, !fir.ref<i32>, !fir.ref<i32>) {
-      %18:2 = hlfir.declare %arg0 {uniq_name = "_QFEs"} : (!fir.ref<f64>) -> (!fir.ref<f64>, !fir.ref<f64>)
-      %19:2 = hlfir.declare %arg1 {uniq_name = "_QFEi"} : (!fir.ref<i32>) -> (!fir.ref<i32>, !fir.ref<i32>)
-      %20:2 = hlfir.declare %arg2 {uniq_name = "_QFEn"} : (!fir.ref<i32>) -> (!fir.ref<i32>, !fir.ref<i32>)
-      omp.teams reduction(@add_reduction_f64 %18#0 -> %arg3 : !fir.ref<f64>) {
+    hlfir.assign %cst to %7#0 : f64, !fir.ref<f64>
+    %8 = omp.map.info var_ptr(%7#1 : !fir.ref<f64>, f64) map_clauses(tofrom) capture(ByRef) -> !fir.ref<f64> {name = "s"}
+    %9 = omp.map.info var_ptr(%5#1 : !fir.ref<i32>, i32) map_clauses(implicit, exit_release_or_enter_alloc) capture(ByCopy) -> !fir.ref<i32> {name = "i"}
+    %c1 = arith.constant 1 : index
+    %c0 = arith.constant 0 : index
+    %10 = arith.subi %c10000, %c1 : index
+    %11 = omp.map.bounds lower_bound(%c0 : index) upper_bound(%10 : index) extent(%c10000 : index) stride(%c1 : index) start_idx(%c1 : index)
+    %12 = omp.map.info var_ptr(%3#1 : !fir.ref<!fir.array<10000xf64>>, !fir.array<10000xf64>) map_clauses(implicit, tofrom) capture(ByRef) bounds(%11) -> !fir.ref<!fir.array<10000xf64>> {name = "a"}
+    omp.target map_entries(%8 -> %arg0, %9 -> %arg1, %12 -> %arg2 : !fir.ref<f64>, !fir.ref<i32>, !fir.ref<!fir.array<10000xf64>>) {
+      %c10000_0 = arith.constant 10000 : index
+      %17:2 = hlfir.declare %arg0 {uniq_name = "_QFEs"} : (!fir.ref<f64>) -> (!fir.ref<f64>, !fir.ref<f64>)
+      %18:2 = hlfir.declare %arg1 {uniq_name = "_QFEi"} : (!fir.ref<i32>) -> (!fir.ref<i32>, !fir.ref<i32>)
+      %19 = fir.shape %c10000_0 : (index) -> !fir.shape<1>
+      %20:2 = hlfir.declare %arg2(%19) {uniq_name = "_QFEa"} : (!fir.ref<!fir.array<10000xf64>>, !fir.shape<1>) -> (!fir.ref<!fir.array<10000xf64>>, !fir.ref<!fir.array<10000xf64>>)
+      omp.teams reduction(@add_reduction_f64 %17#0 -> %arg3 : !fir.ref<f64>) {
         %21:2 = hlfir.declare %arg3 {uniq_name = "_QFEs"} : (!fir.ref<f64>) -> (!fir.ref<f64>, !fir.ref<f64>)
-        omp.parallel private(@_QFEi_private_i32 %19#0 -> %arg4 : !fir.ref<i32>) {
+        omp.parallel private(@_QFEi_private_i32 %18#0 -> %arg4 : !fir.ref<i32>) {
           %22:2 = hlfir.declare %arg4 {uniq_name = "_QFEi"} : (!fir.ref<i32>) -> (!fir.ref<i32>, !fir.ref<i32>)
           %c1_i32 = arith.constant 1 : i32
-          %23 = fir.load %20#0 : !fir.ref<i32>
-          %c1_i32_0 = arith.constant 1 : i32
+          %c10000_i32 = arith.constant 10000 : i32
+          %c1_i32_1 = arith.constant 1 : i32
           omp.distribute {
             omp.wsloop reduction(@add_reduction_f64 %21#0 -> %arg5 : !fir.ref<f64>) {
-              omp.loop_nest (%arg6) : i32 = (%c1_i32) to (%23) inclusive step (%c1_i32_0) {
-                %24:2 = hlfir.declare %arg5 {uniq_name = "_QFEs"} : (!fir.ref<f64>) -> (!fir.ref<f64>, !fir.ref<f64>)
+              omp.loop_nest (%arg6) : i32 = (%c1_i32) to (%c10000_i32) inclusive step (%c1_i32_1) {
+                %23:2 = hlfir.declare %arg5 {uniq_name = "_QFEs"} : (!fir.ref<f64>) -> (!fir.ref<f64>, !fir.ref<f64>)
                 hlfir.assign %arg6 to %22#0 : i32, !fir.ref<i32>
-                %25 = fir.load %24#0 : !fir.ref<f64>
-                %26 = fir.load %22#0 : !fir.ref<i32>
-                %27 = fir.convert %26 : (i32) -> f64
-                %28 = arith.addf %25, %27 fastmath<contract> : f64
-                hlfir.assign %28 to %24#0 : f64, !fir.ref<f64>
+                %24 = fir.load %23#0 : !fir.ref<f64>
+                %25 = fir.load %22#0 : !fir.ref<i32>
+                %26 = fir.convert %25 : (i32) -> i64
+                %27 = hlfir.designate %20#0 (%26)  : (!fir.ref<!fir.array<10000xf64>>, i64) -> !fir.ref<f64>
+                %28 = fir.load %27 : !fir.ref<f64>
+                %29 = arith.addf %24, %28 fastmath<contract> : f64
+                hlfir.assign %29 to %23#0 : f64, !fir.ref<f64>
                 omp.yield
               }
             } {omp.composite}
@@ -56,24 +64,19 @@ module attributes {dlti.dl_spec = #dlti.dl_spec<!llvm.ptr = dense<64> : vector<4
       omp.terminator
     }
     %c6_i32 = arith.constant 6 : i32
-    %10 = fir.address_of(@_QQclX22f96cf2a9392db1eb35faed89390075) : !fir.ref<!fir.char<1,64>>
-    %11 = fir.convert %10 : (!fir.ref<!fir.char<1,64>>) -> !fir.ref<i8>
-    %c11_i32 = arith.constant 11 : i32
-    %12 = fir.undefined !fir.ref<i8>
-    %13 = fir.address_of(@_QQclX733D20) : !fir.ref<!fir.char<1,3>>
-    %c3 = arith.constant 3 : index
-    %14:2 = hlfir.declare %13 typeparams %c3 {fortran_attrs = #fir.var_attrs<parameter>, uniq_name = "_QQclX733D20"} : (!fir.ref<!fir.char<1,3>>, index) -> (!fir.ref<!fir.char<1,3>>, !fir.ref<!fir.char<1,3>>)
-    %15 = fir.convert %14#0 : (!fir.ref<!fir.char<1,3>>) -> !fir.ref<i8>
-    %16 = fir.convert %c3 : (index) -> i64
-    %17 = fir.load %6#0 : !fir.ref<f64>
+    %13 = fir.address_of(@_QQclX22f96cf2a9392db1eb35faed89390075) : !fir.ref<!fir.char<1,64>>
+    %14 = fir.convert %13 : (!fir.ref<!fir.char<1,64>>) -> !fir.ref<i8>
+    %c9_i32 = arith.constant 9 : i32
+    %15 = fir.undefined !fir.ref<i8>
+    %16 = fir.load %7#0 : !fir.ref<f64>
     return
+  }
+  fir.global internal @_QFEa : !fir.array<10000xf64> {
+    %0 = fir.zero_bits !fir.array<10000xf64>
+    fir.has_value %0 : !fir.array<10000xf64>
   }
   fir.global linkonce @_QQclX22f96cf2a9392db1eb35faed89390075 constant : !fir.char<1,64> {
     %0 = fir.string_lit "/home/jan/git/trunk21.0/aomp/trunk/test/reduction_test/main.f90\00"(64) : !fir.char<1,64>
     fir.has_value %0 : !fir.char<1,64>
-  }
-  fir.global linkonce @_QQclX733D20 constant : !fir.char<1,3> {
-    %0 = fir.string_lit "s= "(3) : !fir.char<1,3>
-    fir.has_value %0 : !fir.char<1,3>
   }
 }
