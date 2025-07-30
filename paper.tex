@@ -84,10 +84,13 @@ style=acmnumeric, % use style=acmauthoryear for publications that require it
 %% of the event, and this ID should be used as the parameter to this command.
 \acmSubmissionID{tbd}
 
-%% configure the listings package
+%% the listings
 \lstset{
-  basicstyle=\linespread{0.75}\ttfamily\small,
   captionpos=b,
+}
+\setminted{
+  fontsize=\small,
+  baselinestretch=0.8
 }
 
 %% useful macros
