@@ -478,6 +478,12 @@ Results of automatically parallelizing \code{DO CONCURRENT} on the CPU were repo
 \label{lst:LoopDirSIMDExample}
 \end{listing}
 
+\begin{listing}[t]
+\inputminted{MLIR-lexer.py:MlirLexer -x}{code/loop_dir_wsloop.mlir}
+\caption{Listing~\ref{lst:LoopDirMLIRExample} after lowering to a work-sharing loop.}
+\label{lst:LoopDirWSLoopExample}
+\end{listing}
+
 An OpenMP \code{loop} construct specifies that the logical iterations of the associated loops may execute concurrently~\cite{OARB21}.
 The actual mapping/distribution of the associated loop's iterations across hardware resources depends on the region in which the \code{loop} directive is nested.
 The OpenMP specification provides three possible mappings of a \code{loop} directive:
@@ -492,10 +498,9 @@ For brevity, describing the \code{private()} clause attached to the \code{omp.lo
 
 Starting from the bottom item in the above list since it is the simplest case; \code{loop} directives could be simply serialized.
 However, the LLVM flang compiler takes this a step further by converting \code{loop} directives in this case to corresponding OpenMP \code{simd} constructs (see Listing \ref{lst:LoopDirSIMDExample}).
-The compiler (1) creates a new \code{omp.simd} MLIR operation, (2) transfers the loop's body and attached clauses (i.e. \code{private} and \code{reduction} to the new operation, and (3) deletes the original \code{omp.loop} operation.
-
-Binding the \code{loop} directive to a \code{parallel}; e.g. through nesting the \code{loop} directive tightly inside a \code{parallel} directive, results in different handling of the \code{omp.loop} op by the compiler.
-Listing \ref{lst:LoopDirWSExample} demonstrates this scenario where the same \code{omp.loop} in \ref{lst:LoopDirMLIRExample} is now mapped to an \code{omp.wsloop} (i.e. a work-sharing loop) operation.
+The compiler (1) creates a new \code{omp.simd} MLIR operation, (2) transfers the loop's body and attached clauses (i.e. \code{private} and \code{reduction} to the new operation, and (3) deletes the original \code{omp.loop} operation. Binding the \code{loop} directive to a \code{parallel} region (e.g. through tightly nesting the \code{loop} directive inside a \code{parallel} directive) results in different handling of the \code{omp.loop} op by the compiler.
+Listing \ref{lst:LoopDirWSLoopExample} demonstrates this scenario where the same \code{omp.loop} in Listing \ref{lst:LoopDirMLIRExample} is now mapped to an \code{omp.wsloop} (i.e. a work-sharing loop) operation.
+To perform this transformation, the compiler checks the surrounding context of the input \code{omp.loop}, if it finds that the \code{omp.loop} operation is directly nested inside the an \code{omp.parallel} operation, then the \code{loop} directive is mapped to a work-sharing loop.
 
 \subsection{Transforming the OpenMP \code{reduction} clause}
 \label{sec:OpenMPReduction}
