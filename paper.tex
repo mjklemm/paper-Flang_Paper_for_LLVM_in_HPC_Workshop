@@ -275,11 +275,7 @@ The parser and semantic analysis stages then construct a parse tree of the proce
 The parse tree contains all details about OpenMP directives, clauses, etc. as nodes in the tree.
 
 \begin{listing}[t]
-% \lstinputlisting[%language=Fortran,
-%                 caption={Abridged intermediate representation of the Fortran code in Listing~\ref{lst:FortranExample} with \ac{FIR} and OpenMP \ac{MLIR} dialects.},
-%                 label={lst:FortranExampleFIR}]
-%                 {code/tgt_loop_abridged.fir}
-\inputminted{Text}{code/tgt_loop_abridged.fir}
+\inputminted{MLIR-lexer.py:MlirLexer -x}{code/tgt_loop_abridged.fir}
 \caption{Abridged intermediate representation of the Fortran code in Listing~\ref{lst:FortranExample} with \ac{FIR} and OpenMP \ac{MLIR} dialects.}
 \label{lst:FortranExampleFIR}
 \end{listing}
@@ -422,19 +418,19 @@ Both of these transformations are currently implemented by the LLVM flang compil
 \end{listing}
 
 \begin{listing}[t]
-\inputminted{Text}{code/dc_fir.mlir}
+\inputminted{MLIR-lexer.py:MlirLexer -x}{code/dc_fir.mlir}
 \caption{Listing~\ref{lst:DCExample} after lowering to \ac{FIR} and \ac{HLFIR} dialects.}
 \label{lst:DCFIRExample}
 \end{listing}
 
 \begin{listing}[t]
-\inputminted{Text}{code/dc_omp.mlir}
+\inputminted{MLIR-lexer.py:MlirLexer -x}{code/dc_omp.mlir}
 \caption{Listing~\ref{lst:DCFIRExample} after lowering to OpenMP on the CPU.}
 \label{lst:DCOMPExample}
 \end{listing}
 
 \begin{listing}[t]
-\inputminted{Text}{code/dc_omp_device.mlir}
+\inputminted{MLIR-lexer.py:MlirLexer -x}{code/dc_omp_device.mlir}
 \caption{Listing~\ref{lst:DCFIRExample} after lowering to OpenMP on the GPU.}
 \label{lst:DCOMPDeviceExample}
 \end{listing}
