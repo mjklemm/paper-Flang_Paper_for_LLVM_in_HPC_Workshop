@@ -390,7 +390,7 @@ In addition to filling in the basic mapping information of variables, the compil
 This is needed whenever the size of a data object is not statically known at compile time.
 For instance, the compiler emits intermediate code to access the descriptor of arrays, read the dimensionality and the extent in each dimensions to compute the total number of array elements.
 In \code{FIR} this is reflected by the \code{omp.bounds} statement in lines~\ref{ln:SaxpyMapInfoXBoundsStart}--\ref{ln:SaxpyMapInfoXBoundsEnd} of Listing~\ref{lst:FortranExampleFIR} for \code{x}.
-In the lowered LLVM \ac{IR} code in Listing~\ref{lst:FortranExampleLLVMIR}, this corresponds to lines~\ref{ln:SaxyLLVMIRBoundsXStart}--\ref{ln:SaxyLLVMIRBoundsXStart}.
+In the lowered LLVM \ac{IR} code in Listing~\ref{lst:FortranExampleLLVMIR}, this corresponds to lines~\ref{ln:SaxpyLLVMIRBoundsXStart}--\ref{ln:SaxpyLLVMIRBoundsXEnd}.
 
 % The calculation for the size of the data (in bytes) being mapped is trivial for non-arrays... . 
 % In the case of array types the boundary data provided by the \code{omp.bounds} operation must be factored in...

@@ -1,12 +1,12 @@
 define void @saxpy_(ptr %0, ptr %1, ptr %2, ptr %3) #0 {
   ...
-  %29 = sub i64 %26, 1|\label{ln:SaxyLLVMIRBoundsXStart}|
+  %29 = sub i64 %26, 1|\label{ln:SaxpyLLVMIRBoundsXStart}|
   %30 = sub i64 %21, 1
   %31 = sub i64 %29, 0
   %32 = add i64 %31, 1
   %33 = mul i64 1, %32
-  %element_count = mul i64 %33, 4
-  %omp_loop.tripcount = select i1 %40, i32 0, i32 %42|\label{ln:SaxyLLVMIRBoundsXEnd}|
+  %element_count = mul i64 %33, 4|\label{ln:SaxpyLLVMIRBoundsXEnd}|
+  %omp_loop.tripcount = select i1 %40, i32 0, i32 %42
   br label %entry
 entry:
   ...
