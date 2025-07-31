@@ -94,6 +94,13 @@ style=acmnumeric, % use style=acmauthoryear for publications that require it
   xleftmargin=1em
 }
 
+%% HACK: fix error marks in minted listings
+\makeatletter
+\AtBeginEnvironment{minted}{\dontdofcolorbox}
+\def\dontdofcolorbox{\renewcommand\fcolorbox[4][]{##4}}
+\xpatchcmd{\inputminted}{\minted@fvset}{\minted@fvset\dontdofcolorbox}{}{}
+\makeatother
+
 %% useful macros
 \newcommand{\todo}[1]{\textcolor{red}{#1}}
 \newcommand{\code}[1]{\texttt{#1}\xspace}
