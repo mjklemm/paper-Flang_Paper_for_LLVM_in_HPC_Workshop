@@ -34,11 +34,11 @@ func.func @_QPsaxpy(
     map_clauses(implicit, exit_release_or_enter_alloc)
     capture(ByCopy) -> !fir.ref<f32> {name = "a"}|\label{ln:SaxpyMapInfoImplicitEnd}\label{ln:SaxpyMapInfoImplicitScalarEnd}|
   ...
-  omp.target host_eval(%c1_i32 -> %arg4, ...)
+  omp.target host_eval(%c1_i32 -> %arg4, ...)|\label{ln:SaxpyTargetStart}|
       map_entries(%29 -> %arg7, ...) {
     ...
     omp.teams {
-      omp.parallel private(@_QFsaxpyEi_private_i32
+      omp.parallel private(@_QFsaxpyEi_private_i32|\label{ln:SaxpyParallelStart}|
               %51 -> %arg14 : !fir.ref<i32>) {
         omp.distribute {
           omp.wsloop {
@@ -50,7 +50,7 @@ func.func @_QPsaxpy(
           } {omp.composite}
         } {omp.composite}
         omp.terminator
-      } {omp.composite}
+      } {omp.composite}|\label{ln:SaxpyParallelEnd}|
       omp.terminator
     }
     omp.terminator
