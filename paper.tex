@@ -462,7 +462,7 @@ At runtime, the offload library implementation will process the mapping informat
 For each \code{omp.map.info} statement, the compiler generates LLVM \ac{IR} code to retrieve the base pointer as well as to compute its size and offset of the data to be mapped.
 This is needed whenever the size of a data object is not statically known at compile time; for statically known information, the compiler pass computes these results ahead of time.
 For instance, the compiler emits intermediate code to access the descriptor of arrays, read the dimensionality and the extent in each dimension to compute the total number of array elements.
-In \code{FIR} this is reflected by the \code{omp.bounds} statement in lines~\ref{ln:SaxpyMapInfoXBoundsStart}--\ref{ln:SaxpyMapInfoXBoundsEnd} of Listing~\ref{lst:FortranExampleFIR} for \code{x}.
+In \ac{FIR} this is reflected by the \code{omp.bounds} statement in lines~\ref{ln:SaxpyMapInfoXBoundsStart}--\ref{ln:SaxpyMapInfoXBoundsEnd} of Listing~\ref{lst:FortranExampleFIR} for \code{x}.
 In the lowered LLVM \ac{IR} code in Listing~\ref{lst:FortranExampleLLVMIR}, this corresponds to lines~\ref{ln:SaxpyLLVMIRBoundsXStart}--\ref{ln:SaxpyLLVMIRBoundsXEnd}.
 
 % The calculation for the size of the data (in bytes) being mapped is trivial for non-arrays... . 
@@ -481,23 +481,24 @@ In the lowered LLVM \ac{IR} code in Listing~\ref{lst:FortranExampleLLVMIR}, this
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{Compiler transformations to and between OpenMP constructs}
+\section{Compiler Transformations to and between OpenMP Constructs}
 
-As mentioned in Section \ref{sec:LLVMFlangCompiler}, the AMD Flang compiler models Fortran programs using a mix of the \ac{FIR}, \ac{HLFIR}, and OMP \ac{MLIR} dialects.
-Different parts of the program are modeled using different dialects.
-For instance. the OpenMP directives and clauses are modeled using operations from the OMP dialect.
-Additionally, the \ac{MLIR} infrastructure enables (partially) rewriting or transforming the IR internally throughout the compiler pipeline.
-This rewriting can take place within the same dialect, that is, the compiler rewrites a certain program construct using different operation(s) from the same dialect (e.g., OpenMP to OpenMP transformations).
-The compiler can also rewrite a program construct using operations from a different dialect (e.g., \ac{FIR} to OpenMP transformations).
-In the following subsections, examples of such transformations are demonstrated, all of which are currently implemented by the AMD Flang compiler.
+As mentioned in Section \ref{sec:LLVMFlangCompiler}, the AMD Flang compiler models Fortran programs using a mix of the \ac{FIR}, \ac{HLFIR}, and OpenMP \ac{MLIR} dialects.
+% Different parts of the program are modeled using different dialects.
+% For instance. the OpenMP directives and clauses are modeled using operations from the OMP dialect.
+% Additionally, 
+The \ac{MLIR} infrastructure allows for (partially) rewriting or transforming the \ac{IR} internally throughout the compiler pipelines.
+This can take place within the same dialect, that is, the compiler rewrites a construct to use different operation(s) from the same dialect (e.g., OpenMP-to-OpenMP transformations).
+The compiler can also translate operations into a different dialect (e.g., \ac{FIR} to OpenMP \ac{IR} transformations).
+In the following subsections, examples of such transformations are demonstrated.
+All are currently implemented in the AMD Flang compiler.
 
-\subsection{Automatically parallelizing \code{do concurrent} loops}
+\subsection{Automatically parallelizing \code{DO CONCURRENT} loops}
 \label{sec:DCPar}
 
-Fortran's \code{DO CONCURRENT}~\cite{F2023} construct allows users to write loops whose iterations can be executed in indeterminate order.
-Using \code{DO CONCURRENT} loops, a programmer can express to the compiler which parts of the program could possibly run in parallel.
-\code{DO CONCURRENT}, however, does not specify how a loop should be parallelized and/or where the parallelized loop should be executed (e.g., on the CPU vs. on the GPU).
-Using the LLVM Flang compiler, the user can control how \code{DO CONCURRENT} loops should behave.
+The Fortran \code{DO CONCURRENT}~\cite{F2023} construct allows users to write loops whose iterations can be executed in indeterminate order and  express opportunities for code to execute concurrently.
+\code{DO CONCURRENT}, however, does not specify how a loop should be parallelized or where the parallelized loop should be executed (e.g., CPU or GPU).
+% Using the AMD Flang compiler, a user can control how \code{DO CONCURRENT} loops should behave.
 
 \begin{listing}[t]
 \inputminted{Fortran}{code/dc_saxpy.f90}
@@ -507,34 +508,38 @@ Using the LLVM Flang compiler, the user can control how \code{DO CONCURRENT} loo
 
 \begin{listing}[t]
 \inputminted{MLIR-lexer.py:MlirLexer -x}{code/dc_fir.mlir}
-\caption{Listing~\ref{lst:DCExample} after lowering to \ac{FIR} and \ac{HLFIR} dialects.}
+\caption{Listing~\ref{lst:DCExample} after lowering to \acs{FIR} and \acs{HLFIR} dialects.}
 \label{lst:DCFIRExample}
 \end{listing}
 
 \begin{listing}[t]
 \inputminted{MLIR-lexer.py:MlirLexer -x}{code/dc_omp.mlir}
-\caption{Listing~\ref{lst:DCFIRExample} after lowering to OpenMP on the CPU.}
+\caption{Listing~\ref{lst:DCFIRExample} after lowering to OpenMP \ac{IR} on the CPU.}
 \label{lst:DCOMPExample}
 \end{listing}
 
 \begin{listing}[t]
 \inputminted{MLIR-lexer.py:MlirLexer -x}{code/dc_omp_device.mlir}
-\caption{Listing~\ref{lst:DCFIRExample} after lowering to OpenMP on the GPU.}
+\caption{Listing~\ref{lst:DCFIRExample} after lowering to OpenMP \ac{IR} on the GPU.}
 \label{lst:DCOMPDeviceExample}
 \end{listing}
 
-The compiler currently exposes the \code{-fdo-concurrent-to-openmp} flag which takes one of three possible values: \code{host}, \code{device}, or \code{none}.
+The AMD Flang compiler uses the \code{-fdo-concurrent-to-openmp} to select the compilation target for \code{DO CONCURRENT} loops.  
+The flag which takes one of three possible values: \code{host}, \code{device}, or \code{none}.
 Setting the flag to \code{host} or \code{device} tells the compiler that \code{DO CONCURRENT} loops should run in parallel on the CPU or the GPU, respectively.
 The user can set the flag to \code{none} to prevent parallelization altogether.
-This level of control is enabled by \ac{MLIR}'s ability to model program semantics using different dialects and to map or rewrite these program constructs from one dialect to another if needed.
-In this particular case, the compiler lowers a more abstract construct (\code{fir.do\_concurrent} \ac{MLIR} operations) to a more concrete set of constructs (the equivalent OMP dialect \ac{MLIR} constructs on the CPU or the GPU).
+Depending on the given command line flag, a different code translation from \ac{FIR} to the OpenMP \ac{IR} dialect is selected.
+
+% This level of control is enabled by \ac{MLIR}'s ability to model program semantics using different dialects and to map or rewrite these program constructs from one dialect to another if needed.
+% In this particular case, the compiler lowers a more abstract construct (\code{fir.do\_concurrent} \ac{MLIR} operations) to a more concrete set of constructs (the equivalent OMP dialect \ac{MLIR} constructs on the CPU or the GPU).
 
 To further illustrate this, consider the Fortran code in Listing~\ref{lst:DCExample}.
 Within the compiler pipeline, this loop is represented using the \ac{FIR} and \ac{HLFIR} dialects as shown in Listing~\ref{lst:DCFIRExample}.
 At this stage of the pipeline, the loop's representation still maintains the original semantics of the input program, that is, the fact that this IR originated from a Fortran \code{DO CONCURRENT} construct.
+
 How this loop is further lowered by the compiler can be controlled by the \code{-fdo-concurrent-to-openmp} flag.
-For example, setting the flag to \code{host}, the \code{FIR} + \code{HLFIR} IR in Listing~\ref{lst:DCFIRExample} is lowered to an equivalent OpenMP program that parallelizes the loop on the CPU (Listing~\ref{lst:DCOMPExample}).
-The transformed IR is mix of the three dialects: \code{FIR}, \code{HLFIR}, and OMP.
+For example, setting the flag to \code{host}, the \ac{FIR} and \ac{HLFIR} in Listing~\ref{lst:DCFIRExample} is lowered to an equivalent OpenMP program that parallelizes the loop on the CPU (Listing~\ref{lst:DCOMPExample}).
+The transformed IR is mix of the three dialects: \code{FIR}, \code{HLFIR}, and OpenMP \ac{IR}.
 Note, in particular, that the loop's body is not affected by the transformation; only the constructs that control how that loop will be executed.
 The advantage of such progressive lowering is that the compiler can maintain the original program semantics as much as needed within the pipeline, which allows easier analyses and transformations.
 The transformation pass that does the actual conversion from Fortran-specific constructs to OpenMP ones can be plugged into the compiler pipeline as late as needed, which allows Fortran-specific passes to finish their work before transforming \code{DO CONCURRENT} loops from the Fortran domain to the OpenMP domain.
