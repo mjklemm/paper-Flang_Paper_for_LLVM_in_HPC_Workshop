@@ -401,7 +401,7 @@ This results in multiple independent \ac{MLIR} modules obtained from the same so
 Target device modules are pruned early on in the process, removing all host-only functions except those holding target regions inside, whereas the host module maintains all of the information.
 When compiling for a target device, at the \ac{MLIR} to LLVM \ac{IR} translation step, \code{omp.target} operations are identified and extracted from the host function where they are located into a new one.
 These new outlined kernels, whose parameter list is based on the variables mapped into the target region, together with other device functions identified implicitly or explicitly via OpenMP \code{declare target} directives, are the only ones that remain in the resulting LLVM \ac{IR} module.
-Host compilation performs this kernel outlining process as well, but rather than removing the functions where these target regions reside, it produces in their place calls to the runtime \code{\_\_tgt\_target\_kernel} to offload execution to the corresponding target kernel. Whenever 
+Host compilation performs this kernel outlining process as well, but rather than removing the functions where these target regions reside, it produces in their place calls to the runtime \code{\_\_tgt\_target\_kernel} to offload execution to the corresponding target kernel. Whenever these
 % Except that in place of Clang's parsing and code generation we integrate analogous Flang components. 
 % These are invoked through the Flang \code{ToolChain} which in turn is utilized by the existing Clang driver, which orchestrates the offloading compilation process.
 The first step generates the code for offload regions and the resulting (GPU) kernels that can be invoked from the host.
