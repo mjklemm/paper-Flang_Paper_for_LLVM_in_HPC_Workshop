@@ -303,7 +303,7 @@ The parse tree contains all details about OpenMP directives, clauses, etc. as no
 \label{lst:FortranExampleFIR}
 \end{listing}
 
-The parse tree is then gradually lowered into different levels of intermediate representation, depending on the needs of the applied transformation and optimization passes.
+% The parse tree is then gradually lowered into different levels of intermediate representation, depending on the needs of the applied transformation and optimization passes.
 
 % First, the parse tree is successively transformed into the \ac{MLIR} \ac{HLFIR} and \ac{FIR} (see \ac{FIR} code in  Listing~\ref{lst:FortranExampleFIR}).
 % These intermediate representations provide entities that correspond to Fortran language elements.
@@ -400,7 +400,7 @@ In a later stage, the device binary code is embedded into the host code to creat
 
 To generate GPU code for a \code{target} construct, the compiler performs a process called outlining that extracts the code associated with that \code{target} construct into a separate function.
 The compiler then creates a device function for the outlined code by feeding this outlined code into the code generator for the target device. 
-The outlined function is also processed by the code generator for the host to create the corresponding host version in case host fallback (Listing~\ref{lst:FortranExampleLLVMIR}, lines~\ref{ln:SaxpyLLVMIRHostStart}--~\ref{ln:SaxpyLLVMIRHostEnd}) is needed.
+The outlined function is also processed by the code generator for the host to create the corresponding host version in case host fallback is needed (Listing~\ref{lst:FortranExampleLLVMIR}, lines~\ref{ln:SaxpyLLVMIRHostStart}--~\ref{ln:SaxpyLLVMIRHostEnd}) is needed.
 For additional book keeping in the runtime system, the compiler creates a unique ID of the transformed \code{target} construct.
 At the original code location, the compiler then emits code to call the runtime entry point \code{\_\_tgt\_target\_kernel} to invoke the device (see Listing~\ref{lst:FortranExampleLLVMIR}, lines~\ref{ln:SaxpyLLVMIRInvokeStart}--\ref{ln:SaxpyLLVMIRInvokeEnd}).
 
@@ -677,6 +677,7 @@ That's why the register usage metric provides information about the quality of t
 The smaller number of used registers corresponds to better optimized code.
 Table \ref{tab:registerUsage} presents number of VGPRs and SGPRs used for different types of OpenMP GPU kernels.
 The number of registers required for Fortran code with static arrays, when compiled by AMD Flang at the -O3 optimization level, is comparable to equivalent C code compiled by AMD Clang for the MI300 GPU.
+The comparable number of registers used for Fortran code with static arrays and equivalent C code at the -O3 optimization level indicates that the Fortran code can be heavily optimized by the existing passes, which were primarily written for the optimization of C OpenMP code.
 
 \begin{table}
     \begin{tabular}{|c|c|c|c|}\hline
