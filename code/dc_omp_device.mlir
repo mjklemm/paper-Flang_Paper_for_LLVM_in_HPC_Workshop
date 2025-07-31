@@ -1,7 +1,7 @@
 omp.target
     host_eval([...])
     map_entries([...]) {
-  [...]
+  ...
   omp.teams {
     omp.parallel {
       %102 = fir.alloca i32
@@ -17,7 +17,7 @@ omp.target
               inclusive step (%arg7, %arg10) {
             // Loop body is not affected by the
             // transformation.
-            [...]
+            ...
             omp.yield
           }
         } {omp.composite}

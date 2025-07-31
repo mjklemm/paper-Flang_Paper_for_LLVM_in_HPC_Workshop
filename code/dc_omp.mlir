@@ -10,7 +10,7 @@ omp.parallel {
         to (%40, %43) inclusive step (%c1, %c1_4) {
       // Loop body is not affected by the
       // transformation.
-      [...]
+      ...
       omp.yield
     }
   }
