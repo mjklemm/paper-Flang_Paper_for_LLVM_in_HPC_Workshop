@@ -256,6 +256,15 @@ proident, sunt in culpa qui officia deserunt mollit anim id est laborum.}
 
 \section{Introduction}
 \label{sec:Introduction}
+
+Modern day supercomputers are massively parallel, heterogeneous systems that employ accelerators (mostly GPU) to provide additional compute and memory performance to applications.
+While C/C++, but also Python, gain traction in the HPC domain, Fortran continues to have a large developer base with new high performance code written every day.
+In this world, the OpenMP Application Programming Interface is one of the key components to support application developers and their need to write portable and performant code for such systems, especially in the context of large Fortran codes.  
+
+In 2015, US Department of Energy and NVIDIA announced an effort to development of an open-source Fortran front-end for the LLVM compiler~\cite{Flang-Nvidia-NNSA}.
+The compiler was released in 2017~\cite{Pric17} and in October 2020 was included in an LLVM release for the first time (LLVM version 11.0.0).
+AMD has started releasing a downstream version of LLVM Flang as the AMD Next-Gen Fortran Compiler~\cite{AMD24} at the end of 2024, as it has reached a level of maturity amenable for production testing with large code bases.
+
 \todo{Michael: Write the introduction part}
 \todo{Overall statement about concepts and components inherited from Clang OpenMP e.g. driver, runtime, IR gen in OMPIRBuilder (driver, mentioned elsewhere but could move here)}
 \todo{
@@ -276,8 +285,7 @@ proident, sunt in culpa qui officia deserunt mollit anim id est laborum.}
 
 At the time of writing this paper, the AMD Fortran compiler toolchain is undergoing a transition.
 AMD is actively working on developing the AMD Next-Gen Fortran compiler (``AMD Flang'') that will eventually replace the existing AMD Fortran Compiler for the AMD ROCm\trademark platform.
-While the current Fortran compiler that ships with the AMD ROCm\trademark package is based on the PGI\registered compiler code~\cite{Lara17,Pric17}, the AMD Next-Gen Fortran Compiler is based on the LLVM Flang compiler~\cite{LLVM25}.
-AMD plans to make this the new production compiler that will ship with a future version of the AMD ROCm\trademark software stack.
+While the current Fortran compiler that ships with the AMD ROCm\trademark package is based on the PGI\registered compiler code~\cite{Lara17,Pric17}, the AMD Next-Gen Fortran Compiler is based on the LLVM Flang compiler~\cite{LLVM25}. As a result, AMD Flang is able to take advantage of the OpenMP code generation capabilities already implemented in the LLVM compiler suite as part of its support for its C / C++ front-end called Clang. As of this writing, shared capabilities include the ability to invoke GPU (offloaded) kernels, LLVM metadata generation, and code generation for OpenMP reductions. This list is not exhaustive, and it continues to grow. Increased code reuse brings with it the implicit benefit of wider testing coverage. AMD plans to make this the new production compiler that will ship with a future version of the AMD ROCm\trademark software stack.
 
 \begin{figure}[t]
 \centering
@@ -473,10 +481,38 @@ In the lowered LLVM \ac{IR} code in Listing~\ref{lst:FortranExampleLLVMIR}, this
 
 % Device: Details on how the varying capture types affect input argument access + Details on how the kernel arguments are decided upon.. bit simple, but deserves a sentence.
 
+\subsection{Codegen for the OpenMP \code{reduction} clause}
+\label{sec:OpenMPReduction}
+\todo{Jan will write about 0.2-0.3 columns on this topic.}
+Lowering of the \code{reduction} clause is 
+
+
+\begin{listing}[t]
+\inputminted{Fortran}{code/tgt_reduction.f90}
+\caption{Example Fortran code with the OpenMP \code{reduction} clause.}
+\label{lst:ReductionExample}
+\end{listing}
+
+\begin{listing}[t]
+\inputminted{MLIR-lexer.py:MlirLexer -x}{code/tgt_reduction_abridged.fir}
+\caption{Listing~\ref{lst:ReductionExample} after lowering to \acs{FIR} and \acs{HLFIR} dialects.}
+\label{lst:MLIRReductionExample}
+\end{listing}
+% Codegen for GPU shared between clang and flang
+
 \subsection{Linking OpenMP Host and Device Code}
 \label{sec:LinkingOpenMPHostandDeviceCode}
+Linking OpenMP host and device code is done using the Clang Linker Wrapper tool.
+Both the Flang and Clang drivers use the Clang Linker Wrapper tool for linking and optimizing the device code.
+This tool unifies the compilation procedure across hardware-specific toolchains and enables the generation of device code for multiple targets in a single compilation step.
 
-\todo{About 0.3 columns}
+The first step of the Clang Linker Wrapper is to extract the device LLVM IR code from the object files.
+For each offload device type, the device LLVM \ac{IR} sections are combined with the LLVM \ac{IR} OpenMP device \ac{RTL} code.
+Then, the LLVM \ac{IR} code is optimized using \ac{LTO} passes.
+One of the optimization passes is the \ac{IPO} OpenMPOpt pass, which understands the role of OpenMP runtime functions and can safely reduce OpenMP overhead.
+The optimized device LLVM \ac{IR} is lowered into device-specific assembly, optimized by target-specific processes, and then embedded back into the host code.
+It is subsequently linked together with other host libraries.
+\todo{Add bibliography}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -639,11 +675,6 @@ Both transformations presented in section \ref{sec:DCPar} and in this section ar
     \item The former transforms program constructs from one dialect to another while the latter transforms higher level constructs to lower level ones within the same dialect.
 \end{itemize}
 
-\subsection{Transforming the OpenMP \code{reduction} clause}
-\label{sec:OpenMPReduction}
-\todo{Jan will write about 0.2-0.3 columns on this topic.}
-
-
 \subsection{Lowering of intrisic arithmetic and mathematical functions to the GPU}
 \label{sec:FortranIntrinsics}
 Lowering of intrinsic math functions calls is done using the \ac{MLIR} math dialect.
@@ -651,6 +682,7 @@ The math dialect operations are then lowered to calls to the ROCm math library o
 For complex types the intrinsic function calls are translated to the complex dialect and is then lowered to ROCm math library calls.
 The reason for going through the math and complex dialects instead of directly generating calls to libm is that there is currently no libm library available for the AMDGPU target and the ROCm math library function names differ from the libm names. Another benefit is to allow more optimizations in \ac{MLIR} (e.g., constant folding).
 \subsection{Handling Fortran arrays}
+\todo{Add bibliography}
 The Fortran language allows for declaring static and dynamic multi-dimensional arrays, bounds of which can be described by both positive and negative integers.
 In comparison to static arrays, which size needs to be determined in compilation time, the shape of dynamic array is set up during program runtime.
 Listing \ref{lst:ArrayExample} presents an exemplary Fortran code that uses both types of arrays.
@@ -693,7 +725,7 @@ The calculation of the memory address where a given element of the dynamic array
 
 \begin{listing}[t]
 \inputminted{MLIR-lexer.py:MlirLexer -x}{code/FIR_dynamic_array.mlir}
-\caption{Simplified FIR code for static array}
+\caption{Simplified FIR code for dynamic array}
 \label{lst:FIRDynamicArray}
 \end{listing}
 
