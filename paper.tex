@@ -489,9 +489,9 @@ In the simplest case, the \code{omp.declare\_reduction} operation contains an \c
 There are also optional blocks that handle allocation and deallocation of temporary data if needed.
 
 In the executable code the reduction clauses are represented in \ac{MLIR} as inputs to operations. They contain essentially the same information as in the source code and specify which value should be reduced and which \code{omp.declare\_reduction} should be applied to the value.
-For reductions that are both at the teams and workshare levels, the reductions map to the same value but go through various remappings to distinguish uses inside different regions. However, they are linked so that different levels of reductions operate on the same data. For example, on line ~\ref{ln:ReductionRemap} the variable \code{\%21} gets remapped to \code{\%arg5}.
+For reductions that are both at the \code{teams} and workshare levels, the reductions map to the same value but go through various remappings to distinguish uses inside different regions. However, they are linked so that different levels of reductions operate on the same data. For example, on line~\ref{ln:ReductionRemap} the variable \code{\%21} gets remapped to \code{\%arg5}.
 
-When generating LLVM IR for the GPU the reductions are split up between code that is generated for handling combining and copying data and calls to the device runtime library which handles synchronization between threads, splits up the loop iterations, and calls the generated functions to perform combining and copying operations. This code generation is shared between flang and clang.
+When generating LLVM \ac{IR} for the GPU the reductions are split up between code that is generated for handling combining and copying data and calls to the device runtime library which handles synchronization between threads, splits up the loop iterations, and calls the generated functions to perform combining and copying operations. This code generation is shared between flang and clang.
 
 \begin{listing}[t]
 \inputminted{Fortran}{code/tgt_reduction.f90}
