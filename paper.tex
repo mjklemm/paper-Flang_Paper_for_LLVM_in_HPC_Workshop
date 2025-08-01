@@ -19,9 +19,9 @@
 
 % General issues:
 % Terminology:
-%   array descriptor vs dope vector?
+%   array descriptor vs dope vector? -> array descriptor
 % Default compiler:
-%   AOMP Flang/upstream flang?
+%   AOMP Flang/upstream flang? -> AMD Flang, AFAR builds
 % Default GPU?
 % Are we allowed to present some numbers from microbenchmarks? (i.e. very small code snippets used only for illustration of the problem)
 
@@ -265,7 +265,8 @@ In this world, the OpenMP Application Programming Interface is one of the key co
 
 In 2015, the US Department of Energy and NVIDIA announced an effort to develop an open-source Fortran front-end for the LLVM compiler~\cite{Flang-Nvidia-NNSA}.
 The compiler was released in 2017~\cite{Pric17} and in October 2020 was included in an LLVM release for the first time (LLVM version 11.0.0).
-AMD first released a downstream version of this so-called LLVM Flang as the AMD Next Generation Fortran Compiler~\cite{AMD24} at the end of 2024, as by then it had reached a level of maturity suitable for production testing with large code bases. The AMD Next Generation Fortran Compiler continues to be actively developed by AMD.
+AMD first released a downstream version of LLVM Flang as the AMD Next Generation Fortran Compiler~\cite{AMD24} at the end of 2024, as by then it had reached a level of maturity suitable for production testing with large code bases.
+The AMD Next Generation Fortran Compiler continues to be actively developed by AMD and will eventually be AMD's production Fortran compiler.
 
 The AMD Next Generator Fortran Compiler supports a subset of Fortran 2018~\cite{F2018} and Fortran 2023~\cite{F2023} as well as a material subset of the OpenMP \ac{API} specifications up to version 5.2~\cite{OARB21}.
 Ignoring the historic order of the OpenMP versions, support for the OpenMP \ac{API} has been added to the compiler by identifying relevant features from various OpenMP versions.
@@ -274,20 +275,8 @@ Although not all features from these previous OpenMP versions are currently supp
 While the OpenMP \ac{API} is a holistic programming paradigm for both multi-threading and heterogeneous execution targeting accelerator devices, this paper focuses on \acs{GPU}-specific aspects of the OpenMP\ac{API} and the AMD Next Generation Fortran Compiler.
 The remainder of the paper is structured as follows.
 Section~\ref{sec:LLVMFlangCompiler} provides an overview of the compiler stages of the AMD Next Generation Fortran Compiler.
-The specific aspects of code generation for \acp{GPU} are presented in Section~\ref{sec:OpenMPCodeGen}.
-Section~\ref{sec:CompilerTransOpenMP} then shows select code transformations between OpenMP features and for Fortran features that are translated to OpenMP as an implementation mechanism.
-
-% \todo{Michael: Write the introduction part}
-% \todo{Overall statement about concepts and components inherited from Clang OpenMP e.g. driver, runtime, IR gen in OMPIRBuilder (driver, mentioned elsewhere but could move here)}
-% \todo{
-% \begin{itemize}
-% \item Fortran standard supported by Flang
-% \item OpenMP versions supported by Flang
-% \item Implementations of features driven by request and usefulness, not by historic order.
-% \item Flang shares the runtime infrastructure with Clang, same OpenMP implementation. 
-% \item Paper focuses on GPU offloading, even though OpenMP model is more generic.
-% \end{itemize}
-% }
+The specific aspects of code generation for OpenMP offload to the \acp{GPU} are presented in Section~\ref{sec:OpenMPCodeGen}.
+Section~\ref{sec:CompilerTransOpenMP} then describes select code transformations between OpenMP features and for Fortran features that are translated to OpenMP as an implementation mechanism.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -311,7 +300,7 @@ AMD plans to make this the new production compiler that will ship with a future 
 
 \begin{listing}[t]
 \inputminted{Fortran}{code/tgt_loop.f90}
-\caption{Example Fortran code with a \code{target teams loop} construct and \code{map} clauses.}
+\caption{Example Fortran code with a \code{target teams loop} construct and a \code{map} clause.}
 \label{lst:FortranExample}
 \end{listing}
 
@@ -324,7 +313,7 @@ AMD plans to make this the new production compiler that will ship with a future 
 Figure~\ref{fig:FlangCompilerPhases} shows a simplified overview of the compiler pipeline of the AMD Flang compiler front-end up to LLVM \ac{IR} generation.
 The same stages are also used by the AMD Next Generation Fortran Compiler front-end.
 In the Prescanner \& Preprocessor stage, the lexical analysis and C-style processor produce a stream of characters of normalized Fortran source code. 
-This code contains expanded preprocessor macros, included code resulting from \code{INCLUDE} statements. Unnecessary blank characters and comments are also removed in this stage (see Listing~\ref{lst:FortranExampleCooked}).
+This code contains expanded preprocessor macros, including code resulting from \code{INCLUDE} statements. Unnecessary blank characters and comments are also removed in this stage (see Listing~\ref{lst:FortranExampleCooked}).
 Compiler directives such as \code{!\$DIR} and the OpenMP directives introduced with \code{!\$OMP} remain in the stream of characters.
 The parser and semantic analysis stages then construct a parse tree of the processed Fortran code and annotate it with semantic information (e.g., data types), which is known as the \ac{PFT}.
 The \ac{PFT} contains all details about OpenMP directives, clauses, etc. as nodes in the tree.
@@ -416,7 +405,7 @@ Additionally, \code{omp.map.info} operations are generated when allocatable vari
 In such cases, the descriptor of the allocatable variable is needed on the target side for initializing the private copy, so it is essential to map it using the \code{omp.map.info} operation.
 
 
-\subsection{Kernel Outlining}
+\subsection{Kernel outlining}
 \label{sec:KernelOutlining}
 
 For OpenMP device code generation, the AMD Flang compiler utilizes a process that is very similar to the LLVM Clang compiler~\cite{antao2016offloading}.
@@ -462,7 +451,7 @@ The resulting host and device LLVM modules are later linked together following t
 % Functions that can be invoked by the kernel must also be taken into consideration during this process and emitted for the device. 
 % Such functions can be marked by users via the OpenMP \code{declare target} directive, or through implicit capture from function uses within the \code{target} region performed through Flang's \code{MarkDeclareTarget} \ac{MLIR} transformation pass. 
 
-\subsection{Handling Data Mapping}
+\subsection{Generating code for data mapping}
 \label{sec:HandlingDataMapping}
 
 % During the creation of the outlined kernel function from the \code{target} operation, an important consideration is how the list of \code{map.info} operations affects the kernel function on the device and the entry point on the host.
@@ -493,7 +482,7 @@ In the lowered LLVM \ac{IR} code in Listing~\ref{lst:FortranExampleLLVMIR}, this
 
 % Device: Details on how the varying capture types affect input argument access + Details on how the kernel arguments are decided upon.. bit simple, but deserves a sentence.
 
-\subsection{Codegen for the OpenMP \code{reduction} clause}
+\subsection{Code generation for the OpenMP \code{reduction} clause}
 \label{sec:OpenMPReduction}
 The \code{reduction} clause specifies that a that a reduction operation should be performed on a value and what kind of reduction operation to perform, usually in the context of a loop.
 Listing~\ref{lst:ReductionExample} shows a simple program using a reduction clause.
@@ -515,12 +504,12 @@ When generating LLVM \ac{IR} for the GPU reductions are split up between code th
 
 \begin{listing}[t]
 \inputminted{MLIR-lexer.py:MlirLexer -x}{code/tgt_reduction_abridged.fir}
-\caption{Listing~\ref{lst:ReductionExample} after initial lowering to \ac{MLIR}.}
+\caption{Listing~\ref{lst:ReductionExample} after initial lowering to \acs{MLIR}.}
 \label{lst:MLIRReductionExample}
 \end{listing}
 % Codegen for GPU shared between clang and flang
 
-\subsection{Linking OpenMP Host and Device Code}
+\subsection{Linking OpenMP host and device code}
 \label{sec:LinkingOpenMPHostandDeviceCode}
 % Linking OpenMP host and device code is done using the Clang Linker Wrapper tool.
 Both Flang and Clang compiler drivers use the Clang Linker Wrapper tool for linking together and optimizing host and device code code~\cite{LLVM25}.
@@ -542,7 +531,7 @@ As mentioned in Section \ref{sec:LLVMFlangCompiler}, the AMD Flang compiler mode
 % Different parts of the program are modeled using different dialects.
 % For instance. the OpenMP directives and clauses are modeled using operations from the OMP dialect.
 % Additionally, 
-The \ac{MLIR} infrastructure allows for rewriting or transforming the \ac{IR} internally throughout the compiler pipelines using passes able to create operations from the same or different dialect(s).
+The \ac{MLIR} infrastructure allows for rewriting or transforming the \ac{IR} internally throughout the compiler pipelines using passes that create operations from the same or different dialect(s).
 % This can take place within the same dialect, that is, the compiler rewrites a construct to use different operation(s) from the same dialect (e.g., OpenMP-to-OpenMP transformations).
 % The compiler can also translate operations into a different dialect (e.g., \ac{FIR} to OpenMP \ac{IR} transformations).
 In the following subsections, examples of such transformations implemented in the AMD Flang compiler are presented.
@@ -658,7 +647,7 @@ An OpenMP \code{loop} construct specifies that the logical iterations of the ass
 The actual mapping/distribution of the associated loop's iterations across hardware resources depends on the region in which the \code{loop} directive is nested.
 The OpenMP specification provides three possible mappings of a \code{loop} directive:
 \begin{itemize}
-    \item When it binds to a \code{teams} region, the loop's iterations are executed by the \textbf{primary threads} that execute the region.
+    \item When it binds to a \code{teams} region, the loop's iterations are executed by the primary threads that execute the region.
     \item When it binds to a \code{parallel} region, the loop's iterations are executed by the team of threads in the \code{parallel} region.
     \item Otherwise, the loop is executed by a single thread.
 \end{itemize}
@@ -700,6 +689,7 @@ Lowering of calls to intrinsic math functions is done via the \ac{MLIR} math dia
 The math dialect operations are then lowered to calls to the ROCm\trademark math library or to LLVM \ac{IR} intrinsics if the operations are directly supported by the AMD GPU backend.
 For complex types the intrinsic function calls are translated to the complex dialect and then lowered to ROCm\trademark math library calls.
 The reason for going through the math and complex dialects instead of directly generating calls to \textit{libm} is that there is currently no \textit{libm} library available for the AMD GPU target and the ROCm\trademark math library function names differ from the \textit{libm} names. Another benefit is to allow more optimizations in \ac{MLIR} (e.g., constant folding).
+
 \subsection{Handling Fortran arrays}
 The Fortran language allows for declaring static and dynamic multi-dimensional arrays, bounds of which can be described by both positive and negative integers~\cite{F2023}.
 In comparison to static arrays, which size needs to be determined at compilation time, the shape of dynamic arrays is set up during program runtime.
@@ -746,7 +736,7 @@ The \code{fir.box\_addr} operation corresponds to the calculation of the memory 
 The \code{fir.shape\_shift} operation is a \ac{FIR}-specific operation that converts a set of numbers into a \ac{FIR} abstract shape object.
 Finally, when all required data is loaded from the descriptor, it is possible to determine the pointer to a given element of the dynamically allocated array using an \code{fir.array\_coor} operation~\cite{LLVM25}.
 
-\subsection{Comparison of the code by Clang and Flang}
+\subsection{Comparison of the code generated by Clang and Flang}
 The way array elements are accessed is the same for code executed on a GPU and on a CPU.
 However, the handling of descriptors requires more load operations, which can lead to a higher number of registers being used and increased memory usage.
 High register occupancy and increased memory usage can lead to significantly slower code, especially for GPUs, where memory bandwidth is the primary factor limiting the efficiency of calculations.
@@ -776,7 +766,7 @@ The comparable number of registers used for Fortran code with static arrays and 
 \end{table}
 
 \subsection{Limiting dynamic memory allocation on the GPU}
-Dynamic memory allocation (i.e. using \code{malloc}) is managed by the \ac{OS}.
+Dynamic memory allocation (i.e., using \code{malloc}) is managed by the \ac{OS}.
 Since the GPU cannot directly request such service from the \ac{OS}, calls to \code{malloc} on the GPU have to be routed to the host first; which in turn requests the memory allocation from the \ac{OS}.
 Once the allocation is successful and the host receives a pointer to the memory block, it then transfers the ownership of that block to the GPU, completing the the allocation process.
 This communication mechanism between the CPU and GPU is implemented through an \ac{RPC} call from the GPU to the CPU (\cite{gpulibc}).
@@ -806,7 +796,7 @@ Here, \code{[x, x*2]} constructs a two-element array which is then assigned to \
 By default, the AMD Flang compiler allocates these temporary arrays on the heap (for the sake of brevity, the reasons for such design choice are not discussed here).
 Listing \ref{lst:TempArrayHeapExample} shows such default behavior.
 In particular, the \code{fir.allocmem} and \code{fir.destroy} \ac{MLIR} operations correspond to dynamic memory allocation (a call to \code{malloc}) and deallocation (a call to \code{free}), respectively.
-To allocate the temporary array on the stack instead; AMD Flang's \code{stack-arrays} pass was extended to process OpenMP regions and the pass is used when compiling for the GPU.
+To allocate the temporary array on the stack instead; AMD Flang's \textit{stack-arrays} pass was extended to process OpenMP regions and the pass is used when compiling for the GPU.
 The result of this transformation is shown in Listing \ref{lst:TempArrayStackExample}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
