@@ -651,8 +651,8 @@ An OpenMP \code{loop} construct specifies that the logical iterations of the ass
 The actual mapping/distribution of the associated loop's iterations across hardware resources depends on the region in which the \code{loop} directive is nested.
 The OpenMP specification provides three possible mappings of a \code{loop} directive:
 \begin{itemize}
-    \item When the binding region is a \code{teams} one, the loop's iterations are executed by the \textbf{primary threads} that execute the \code{teams} region.
-    \item When the binding region is a \code{parallel} one, the loop's iterations are executed by the team of threads in the \code{parallel} region.
+    \item When it binds to a \code{teams} region, the loop's iterations are executed by the \textbf{primary threads} that execute the region.
+    \item When it binds to a \code{parallel} region, the loop's iterations are executed by the team of threads in the \code{parallel} region.
     \item Otherwise, the loop is executed by a single thread.
 \end{itemize}
 During the initial stages of the compiler pipeline, the context (or binding region) of \code{loop} directives is ignored.
@@ -664,19 +664,19 @@ However, the AMD Flang compiler takes this a step further by converting \code{lo
 The compiler (1) creates a new \code{omp.simd} \ac{MLIR} operation, (2) transfers the loop's body and attached clauses (i.e., \code{private} and \code{reduction}) to the new operation, and (3) deletes the original \code{omp.loop} operation.
 Binding the \code{loop} directive to a \code{parallel} region (e.g., through tightly nesting the \code{loop} directive inside a \code{parallel} directive) results in different handling of the \code{omp.loop} op by the compiler.
 Listing \ref{lst:LoopDirWSLoopExample} demonstrates this scenario where the same \code{omp.loop} in Listing \ref{lst:LoopDirMLIRExample} is now mapped to an \code{omp.wsloop} (i.e. a work-sharing loop) operation.
-To perform this transformation, the compiler checks the surrounding context of the input \code{omp.loop}, if it finds that the \code{omp.loop} operation is directly nested inside an \code{omp.parallel} operation, then the \code{loop} directive is mapped to a work-sharing loop.
+To perform this transformation, the compiler checks the surrounding context of the input \code{omp.loop} and, if it finds that the \code{omp.loop} operation is directly nested inside of an \code{omp.parallel} operation, then the \code{loop} directive is mapped to a work-sharing loop.
 
 Handling the case where a \code{loop} directive binds to a \code{teams} region is more involved than the previous two cases.
 To gain the most performance, a \code{loop} directive could be mapped to the \code{distribute parallel do} OpenMP composite construct.
 However, this mapping is not always possible or safe to do.
 In such cases, the compiler simply maps the \code{loop} directive to the \code{distribute} construct.
-A \code{loop} construct with \code{teams} binding can be mapped to a work-sharing loop (i.e., mapped to \code{distribute parallel do}) only if:
+A \code{loop} construct with \code{teams} binding can be mapped to \code{distribute parallel do} only if:
 \begin{itemize}
     \item it does not enclose another work-sharing loop; and
     \item it does not contain calls to functions that might themselves have nested parallelism.
 \end{itemize}
 Both restrictions are imposed to prevent nesting work-sharing loops.
-At the time of writing, the first restriction is satisfied if a \code{loop} directive has \code{parallel} binding; while the second restriction is satisfied if a call to a non-OpenMP runtime API is found in the loop's body.
+At the time of writing, the first restriction is satisfied if a \code{loop} directive has \code{parallel} binding, whereas the second is satisfied if a call to a non-OpenMP runtime API is found in the loop's body.
 Both restrictions can be made more general.
 Listings \ref{lst:LoopDirTeamsExample1} and \ref{lst:LoopDirTeamsMLIRExample1} show an example where a \code{loop} directive can be mapped to a work-sharing loop because of the absence of both restrictions mentioned above.
 Listings \ref{lst:LoopDirTeamsExample2} and \ref{lst:LoopDirTeamsMLIRExample2} show an example of the second restriction where a call to an unknown function \code{foo} inhibits converting the \code{loop} to a work-sharing loop.
