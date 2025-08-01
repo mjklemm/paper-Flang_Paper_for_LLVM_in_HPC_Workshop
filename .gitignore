@@ -27,4 +27,4 @@ paper.ps
 *.swp
 *.swo
 .nfs*
-_minted-paper
+_minted-paper*
