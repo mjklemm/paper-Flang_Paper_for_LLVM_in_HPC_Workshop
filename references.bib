@@ -181,3 +181,36 @@ institution = {International Organization for Standardization}
   pages={2-14},
   doi={10.1109/CGO51591.2021.9370308}
 }
+
+@misc{gpulibc,
+  author={Huber, Joseph},
+  title={The LLVM C Library for GPUs},
+  year={2023},
+  url={https://llvm.org/devmtg/2023-10/slides/techtalks/Huber-LibCforGPUs.pdf},
+}
+
+@misc{clangLinkerWrapper,
+  author={Huber, Joseph},
+  title={Improving the OpenMP Offloading Driver: LTO, Libraries, and Toolchains},
+  year={2022},
+  month={04},
+  url={https://llvm.org/devmtg/2022-04-03/slides/Improving.the.OpenMP.Offloading.Driver.LTO.libraries.and.toolchains.pdf},
+}
+
+@inproceedings{OpenMPOpt,
+author = {Huber, Joseph and Cornelius, Melanie and Georgakoudis, Giorgis and Tian, Shilei and Diaz, Jose M Monsalve and Dinel, Kuter and Chapman, Barbara and Doerfert, Johannes},
+title = {Efficient execution of OpenMP on GPUs},
+year = {2022},
+isbn = {9781665405843},
+publisher = {IEEE Press},
+url = {https://doi.org/10.1109/CGO53902.2022.9741290},
+doi = {10.1109/CGO53902.2022.9741290},
+abstract = {OpenMP is the preferred choice for CPU parallelism in High-Performance-Computing (HPC) applications written in C, C++, or Fortran. As HPC systems became heterogeneous, OpenMP introduced support for accelerator offloading via the target directive. This allowed porting existing (CPU) code onto GPUs, including well established CPU parallelism paradigms. However, there are architectural differences between CPU and GPU execution which make common patterns, like forking and joining threads, single threaded execution, or sharing of local (stack) variables, in general costly on the latter. So far it was left to the user to identify and avoid non-efficient code patterns, most commonly by writing their OpenMP offloading codes in a kernel-language style which resembles CUDA more than it does traditional OpenMP.In this work we present OpenMP-aware program analyses and optimizations that allow efficient execution of the generic, CPU-centric parallelism model provided by OpenMP on GPUs. Our implementation in LLVM/Clang maps various common OpenMP patterns found in real world applications efficiently to the GPU. As static analysis is inherently limited we provide actionable and informative feedback to the user about the performed and missed optimizations, together with ways for the user to annotate the program for better results. Our extensive evaluation using several HPC proxy applications shows significantly improved GPU kernel times and reduction in resources requirements, such as GPU registers.},
+booktitle = {Proceedings of the 20th IEEE/ACM International Symposium on Code Generation and Optimization},
+pages = {41–52},
+numpages = {12},
+keywords = {GPU, LLVM, OpenMP, offloading, optimization},
+location = {Virtual Event, Republic of Korea},
+series = {CGO '22}
+}
+

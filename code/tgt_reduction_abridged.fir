@@ -16,7 +16,7 @@ omp.teams reduction(@add_reduction_f64 %17#0 -> %arg3 :
  !fir.ref<i32>) {
  [...]
    omp.distribute {
-    omp.wsloop reduction(@add_reduction_f64 %21#0 -> %arg5 :
+    omp.wsloop reduction(@add_reduction_f64 %21#0 -> %arg5 :|\label{ln:ReductionRemap}|
     !fir.ref<f64>) {
      omp.loop_nest (%arg6) : i32 =
      (%c1_i32) to (%c10000_i32) inclusive step (%c1_i32_1)
