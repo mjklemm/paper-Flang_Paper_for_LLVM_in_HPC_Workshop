@@ -678,8 +678,8 @@ A \code{loop} construct with \code{teams} binding can be mapped to \code{distrib
 Both restrictions are imposed to prevent nesting work-sharing loops.
 At the time of writing, the first restriction is satisfied if a \code{loop} directive has \code{parallel} binding, whereas the second is satisfied if a call to a non-OpenMP runtime API is found in the loop's body.
 Both restrictions can be made more general.
-Listings \ref{lst:LoopDirTeamsExample1} and \ref{lst:LoopDirTeamsMLIRExample1} show an example where a \code{loop} directive can be mapped to a work-sharing loop because of the absence of both restrictions mentioned above.
-Listings \ref{lst:LoopDirTeamsExample2} and \ref{lst:LoopDirTeamsMLIRExample2} show an example of the second restriction where a call to an unknown function \code{foo} inhibits converting the \code{loop} to a work-sharing loop.
+Listings \ref{lst:LoopDirTeamsExample1} and \ref{lst:LoopDirTeamsMLIRExample1} show an example where a \code{loop} directive can be mapped to a work-sharing loop due to not meeting any of the restrictions above.
+Listings \ref{lst:LoopDirTeamsExample2} and \ref{lst:LoopDirTeamsMLIRExample2} show an example where a call to an unknown function \code{foo} inhibits converting the \code{loop} to a work-sharing loop.
 
 Both transformations presented in section \ref{sec:DCPar} and in this section are examples of internal (i.e., \ac{MLIR} to \ac{MLIR}) transformations performed by the AMD Flang compiler. However, a few differences between the two stand out:
 \begin{itemize}
