@@ -265,7 +265,7 @@ proident, sunt in culpa qui officia deserunt mollit anim id est laborum.}
 
 Modern day supercomputers are massively parallel, heterogeneous systems that employ accelerators (mostly GPU) to provide additional compute and memory performance to applications.
 While C/C++, but also Python, gain traction in the \ac{HPC} domain, Fortran continues to have a large developer base with new high performance code written every day.
-In this world, the OpenMP Application Programming Interface is one of the key components to support application developers and their need to write portable and performant code for such systems, especially in the context of large Fortran codes.  
+In this world, the OpenMP Application Programming Interface is one of the key components to support application developers and their need to write portable and performant code for such systems, especially in the context of large Fortran codes.
 
 In 2015, US Department of Energy and NVIDIA announced an effort to develop an open-source Fortran front-end for the LLVM compiler~\cite{Flang-Nvidia-NNSA}.
 The compiler was released in 2017~\cite{Pric17} and in October 2020 was included in an LLVM release for the first time (LLVM version 11.0.0).
@@ -544,7 +544,7 @@ In the following subsections, examples of such transformations implemented in th
 \subsection{Automatically parallelizing \code{DO CONCURRENT} loops}
 \label{sec:DCPar}
 
-The Fortran \code{DO CONCURRENT}~\cite{F2023} construct allows users to write loops whose iterations can be executed in indeterminate order and  express opportunities for code to execute concurrently.
+The Fortran \code{DO CONCURRENT}~\cite{F2023} construct allows users to write loops whose iterations can be executed in indeterminate order and express opportunities for code to execute concurrently.
 \code{DO CONCURRENT}, however, does not specify how a loop should be parallelized or where the parallelized loop should be executed (e.g., CPU or GPU).
 % Using the AMD Flang compiler, a user can control how \code{DO CONCURRENT} loops should behave.
 
@@ -572,7 +572,7 @@ The Fortran \code{DO CONCURRENT}~\cite{F2023} construct allows users to write lo
 \label{lst:DCOMPDeviceExample}
 \end{listing}
 
-The \code{-fdo-concurrent-to-openmp} compiler option selects the compilation target for \code{DO CONCURRENT} loops.  
+The \code{-fdo-concurrent-to-openmp} compiler option selects the compilation target for \code{DO CONCURRENT} loops.
 The flag takes one of three possible arguments: \code{host}, \code{device}, or \code{none}.
 Setting it to \code{host} or \code{device} tells the compiler that \code{DO CONCURRENT} loops should run in parallel on the CPU or the GPU, respectively.
 The user can set the flag to \code{none} to prevent parallelization altogether.
