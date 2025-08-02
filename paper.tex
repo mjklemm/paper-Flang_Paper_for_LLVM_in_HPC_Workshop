@@ -315,7 +315,7 @@ Figure~\ref{fig:FlangCompilerPhases} shows a simplified overview of the compiler
 The same stages are also used by the AMD Next Generation Fortran Compiler front-end.
 In the Prescanner \& Preprocessor stage, the lexical analysis and C-style processor produce a stream of characters of normalized Fortran source code. 
 This code contains expanded preprocessor macros, including code resulting from \code{INCLUDE} statements. Unnecessary blank characters and comments are also removed in this stage (see Listing~\ref{lst:FortranExampleCooked}).
-Compiler directives such as \code{!\$DIR} and the OpenMP directives introduced with \code{!\$OMP} remain in the stream of characters.
+Compiler directives such as \code{!\$DIR} and OpenMP directives (\code{!\$OMP}) remain in the stream of characters.
 The parser and semantic analysis stages then construct a parse tree of the processed Fortran code and annotate it with semantic information (e.g., data types), which is known as the \ac{PFT}.
 The \ac{PFT} contains all details about OpenMP directives, clauses, etc. as nodes in the tree.
 
