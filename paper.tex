@@ -311,7 +311,7 @@ AMD plans to make this the new production compiler that will ship with a future 
 \label{lst:FortranExampleCooked}
 \end{listing}
 
-Figure~\ref{fig:FlangCompilerPhases} shows a simplified overview of the compiler pipeline of the AMD Flang compiler front-end up to LLVM \ac{IR} generation.
+Figure~\ref{fig:FlangCompilerPhases} shows a simplified overview of the compiler pipeline of the LLVM Flang compiler front-end up to LLVM \ac{IR} generation.
 The same stages are also used by the AMD Next Generation Fortran Compiler front-end.
 In the Prescanner \& Preprocessor stage, the lexical analysis and C-style processor produce a stream of characters of normalized Fortran source code. 
 This code contains expanded preprocessor macros, including code resulting from \code{INCLUDE} statements. Unnecessary blank characters and comments are also removed in this stage (see Listing~\ref{lst:FortranExampleCooked}).
