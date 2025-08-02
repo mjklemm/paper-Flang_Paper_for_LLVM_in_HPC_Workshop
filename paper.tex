@@ -332,7 +332,7 @@ These dialects provide operations and types that directly correspond to Fortran 
 As the name suggests, the \code{hlfir} dialect is used to express higher level semantics of Fortran (e.g., array operations that can be used to optimize Fortran array statements) along with a type system to represent Fortran attributes for (dummy) variables.
 
 The OpenMP constructs in the program are represented using operations from the OpenMP dialect (prefix \code{omp}).
-This initial mix of \ac{MLIR} operations produced by the AMD Flang front-end then goes through multiple dialect conversion and transformation passes, which result in a final \ac{MLIR} module mainly holding \code{llvm}, \code{omp} and other low-level dialect operations for which direct translations to LLVM \ac{IR} are defined.
+This initial mix of \ac{MLIR} operations produced by the AMD Flang front-end then passes through multiple dialect conversion and transformation passes, which result in a final \ac{MLIR} module mainly holding \code{llvm}, \code{omp} and other low-level dialect operations for which direct translations to LLVM \ac{IR} are defined.
 For example, the \code{DO} loop nest in Listing~\ref{lst:FortranExample} is expressed using \code{omp} dialect constructs that correspond to the OpenMP \code{target teams loop} construct as shown in Listing~\ref{lst:FortranExampleFIR}.
 
 The \code{omp} dialect is designed to represent the directives and clauses defined by the OpenMP specification, so the \ac{MLIR} representation closely resembles the structure of the original program at a high-level.
