@@ -327,7 +327,7 @@ The \ac{PFT} contains all details about OpenMP directives, clauses, etc. as node
 
 % The parse tree is then gradually lowered into different levels of intermediate representation, depending on the needs of the applied transformation and optimization passes.
 
-The \ac{PFT} is then gradually lowered using the \ac{MLIR} infrastructure~\cite{mlir}. The initial \ac{MLIR} representation obtained from the \ac{PFT} primarily contains operations from the \ac{HLFIR} and \ac{FIR} dialects of \ac{MLIR} (prefixed respectively with \code{hlfir} and \code{fir}).
+The \ac{PFT} is then gradually lowered using the \ac{MLIR} infrastructure~\cite{mlir}. The initial \ac{MLIR} representation obtained from the \ac{PFT} mainly contains operations from the \ac{HLFIR} and \ac{FIR} dialects of \ac{MLIR} (prefixed, respectively, with \code{hlfir} and \code{fir}).
 These dialects provide operations and types that directly correspond to Fortran language concepts.
 As the name suggests, the \code{hlfir} dialect is used to express higher level semantics of Fortran (e.g., array operations that can be used to optimize Fortran array statements) along with a type system to represent Fortran attributes for (dummy) variables.
 
@@ -336,8 +336,8 @@ This initial mix of \ac{MLIR} operations produced by the AMD Flang front-end the
 For example, the \code{DO} loop nest in Listing~\ref{lst:FortranExample} is expressed using \code{omp} dialect constructs that correspond to the OpenMP \code{target teams loop} construct as shown in Listing~\ref{lst:FortranExampleFIR}.
 
 The \code{omp} dialect is designed to represent the directives and clauses defined by the OpenMP specification, so the \ac{MLIR} representation closely resembles the structure of the original program at a high-level.
-Generally, each operation corresponds to a single directive, which can take multiple arguments to represent the various clauses supported by it.
-A structured block associated with an OpenMP construct is represented in \ac{MLIR} through a region owned by that operation, resulting in a nesting structure that resembles the original program (e.g., see line~\ref{ln:SaxpyTargetStart} of Listing~\ref{lst:FortranExampleFIR}).
+Typically, each operation corresponds to a single OpenMP directive, which can accepts multiple, some even optional, arguments to represent the various clauses supported by the corresponding directive.
+A structured block associated with an OpenMP construct is represented in \ac{MLIR} by way of a region owned by that operation, resulting in a nesting structure that resembles the original program (e.g., see line~\ref{ln:SaxpyTargetStart} of Listing~\ref{lst:FortranExampleFIR}).
 Combined constructs are split into each of their constituent parts while attaching the applicable clauses (explicit or implicit) to each leaf operation.
 Loop-associated constructs are represented in the \code{omp} dialect by ``loop wrappers'', which are operations that meet stringent criteria:
 
@@ -348,14 +348,14 @@ Loop-associated constructs are represented in the \code{omp} dialect by ``loop w
 \end{itemize}
 
 For example, lines~\ref{ln:SaxpyParallelStart} to~\ref{ln:SaxpyParallelEnd} in Listing~\ref{lst:FortranExampleFIR} show how a \code{distribute parallel do} composite construct would be represented.
-It includes the \code{omp.distribute} and \code{omp.wsloop} loop wrappers around a single \code{omp.loop\_nest} holding the loop body.
-This also displays the one exception in the \code{omp} dialect where the original order of leaf constructs in a compound construct is not respected, which results in the \code{omp.parallel} operation being hoisted and made a parent of both loop wrappers.
+It includes the \code{omp.distribute} and \code{omp.wsloop} loop wrappers around a single \code{omp.loop\_nest} that holds the loop body.
+This also shows the one exception in the \code{omp} dialect where the original order of leaf constructs in a compound construct is not respected, which results in the \code{omp.parallel} operation being hoisted and made a parent of both loop wrappers.
 Local variables introduced by clauses such as \code{private} or \code{map} are represented by entry block arguments to the code region owned by the corresponding \ac{MLIR} operation, and custom parsers and printers are provided to make the relationship between outside values and local ones explicit.
 This is shown by the \code{omp.parallel private(...)} clause in the same example.
 
-Contrary to the \code{hlfir} and \code{fir} dialects, even though the \code{omp} dialect features a relatively high level of abstraction, when it comes to translating \ac{MLIR} to LLVM \ac{IR}, it does not rely on conversions to other lower level dialects.
-Instead of converting to other dialects with existing paths to LLVM \ac{IR}, the \code{omp} dialect can be directly translated to LLVM \ac{IR} through the use of the \textit{OpenMPIRBuilder} compiler component.
-This utility, which is shared with Clang, helps reuse OpenMP-specific codegen logic between both frontends.
+Although the \code{omp} dialect represents the program at a relatively high level of abstraction, unlike the \code{hlfir} and \code{fir} dialects, it does not need to be lowered to other lower-level dialects before it is lowered to LLVM \ac{IR}.
+Instead of converting to other dialects with existing paths of lowering to LLVM \ac{IR}, the \code{omp} dialect can be directly translated to LLVM \ac{IR} through the use of the \textit{OpenMPIRBuilder} compiler component.
+This utility, which is shared with Clang, helps reuse OpenMP-specific code generation logic between both front-ends.
 Once LLVM \ac{IR} is generated, this is handed to the compiler back-end for target code generation.
 
 % OpenMP directives and clauses are reflected in this intermediate representation via an additional \ac{MLIR} dialect that mixes with \ac{HLFIR} and \ac{FIR}.
@@ -369,11 +369,11 @@ Once LLVM \ac{IR} is generated, this is handed to the compiler back-end for targ
 \section{OpenMP Code Generation for GPU}
 \label{sec:OpenMPCodeGen}
 
-To generate code for device execution that adheres to the OpenMP semantics, the compiler has to perform these steps:
+To generate code for device execution that adheres to the semantics of OpenMP, the compiler has to perform the following steps:
 
 \begin{itemize}
 \item identify all implicitly and explicitly mapped variables for \code{target} constructs;
-\item outline \code{target} constructs into a separate functions;
+\item outline \code{target} constructs into separate functions;
 \item generate boilerplate code to invoke the outlined functions and pass data-mapping information to them; and
 \item link the individual object files with host and device code to produce the final executable.
 \end{itemize}
