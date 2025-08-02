@@ -383,7 +383,7 @@ We will provide an overview of the above steps throughout the remainder of this 
 \subsection{OpenMP Data Mapping Analysis}
 \label{sec:OpenMPDataMappingAnalysis}
 
-Each list item in a \code{map} clause is processed individually to produce an individual \code{omp.map.info} operation in the intermediate representation. 
+Each list item in a \code{map} clause is processed individually to produce a corresponding \code{omp.map.info} operation in the intermediate representation. 
 For a given \code{target} \code{map} clause, the \code{omp.map.info} operation encapsulates all the relevant information that is needed to map a variable onto the device.
 This includes the \textit{map-type} modifier as well as the base address and bounds of the data to be mapped (see line~\ref{ln:SaxpyMapClause} of Listing~\ref{lst:FortranExample}).
 For instance, the \textit{map-type} modifier \code{to} is represented as \code{map\_clauses(to)} in lines~\ref{ln:SaxpyMapInfoXStart}--\ref{ln:SaxpyMapInfoXEnd} in Listing~\ref{lst:FortranExampleFIR}.
