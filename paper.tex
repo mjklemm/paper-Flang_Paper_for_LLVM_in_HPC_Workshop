@@ -702,7 +702,7 @@ For complex types the intrinsic function calls are translated to the complex dia
 The reason for going through the math and complex dialects instead of directly generating calls to \textit{libm} is that there is currently no \textit{libm} library available for the AMD GPU target and the ROCm\trademark math library function names differ from the \textit{libm} names. Another benefit is to allow more optimizations in \ac{MLIR} (e.g., constant folding or strength reduction).
 
 \subsection{Handling Fortran arrays}
-The Fortran language allows for declaring static and dynamic multi-dimensional arrays, bounds of which can be described by both positive and negative integers~\cite{F2023}.
+The Fortran language allows for declaring static and dynamic multi-dimensional arrays with bounds that may consist of positive and negative integers~\cite{F2023}.
 In comparison to static arrays, which size needs to be determined at compilation time, the shape of dynamic arrays is set up during program runtime.
 Listing \ref{lst:ArrayExample} presents an exemplary Fortran code that uses both types of arrays.
 
