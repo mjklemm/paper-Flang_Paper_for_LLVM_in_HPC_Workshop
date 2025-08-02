@@ -489,16 +489,19 @@ In the lowered LLVM \ac{IR} code in Listing~\ref{lst:FortranExampleLLVMIR}, this
 \subsection{Code generation for the OpenMP \code{reduction} clause}
 \label{sec:OpenMPReduction}
 The \code{reduction} clause specifies that a that a reduction operation should be performed on a value and what kind of reduction operation to perform, usually in the context of a loop.
-Listing~\ref{lst:ReductionExample} shows a simple program using a reduction clause.
-The AMD Flang compiler lowers the code to MLIR as shown in Listing~\ref{lst:MLIRReductionExample}.
-The reduction operation itself is represented in MLIR as an \code{omp.declare\_reduction} operation.
+Listing~\ref{lst:ReductionExample} shows a simple program using such a reduction clause.
+
+The AMD Flang compiler lowers the code to \ac{MLIR} as shown in Listing~\ref{lst:MLIRReductionExample}.
+The reduction operation itself is represented in \ac{MLIR} as an \code{omp.declare\_reduction} operation.
 In the simplest case, the \code{omp.declare\_reduction} operation contains an \code{init} block defining what the initial value should be for a reduction value and a \code{combiner} block which defines how to reduce two elements into one.
 There are also optional blocks that handle allocation and deallocation of temporary data if needed.
 
 In the executable code the reduction clauses are represented in \ac{MLIR} as inputs to operations. They contain essentially the same information as in the source code and specify which value should be reduced and which \code{omp.declare\_reduction} should be applied to the value.
 For reductions that are both at the \code{teams} and workshare levels, the reductions map to the same value but go through various remappings to distinguish uses inside different regions. However, they are linked so that different levels of reductions operate on the same data. For example, on line~\ref{ln:ReductionRemap} the variable \code{\%21} gets remapped to \code{\%arg5}.
 
-When generating LLVM \ac{IR} for the GPU reductions are split up between code that is generated for handling combining and copying data and calls to the device runtime library, which handles synchronization between threads, splits up the loop iterations, and calls the generated functions to perform combining and copying operations. This code generation is shared between Flang and Clang.
+When generating LLVM \ac{IR}, the GPU reductions are split up between code that is generated for handling combining and copying data and calls to the device runtime library.
+The runtime library handles synchronization between threads, splits up the loop iterations, and calls the generated functions to perform combining and copying operations.
+This code generation is again shared between Flang and Clang.
 
 \begin{listing}[t]
 \inputminted{Fortran}{code/tgt_reduction.f90}
@@ -516,14 +519,14 @@ When generating LLVM \ac{IR} for the GPU reductions are split up between code th
 \subsection{Linking OpenMP host and device code}
 \label{sec:LinkingOpenMPHostandDeviceCode}
 % Linking OpenMP host and device code is done using the Clang Linker Wrapper tool.
-Both Flang and Clang compiler drivers use the Clang Linker Wrapper tool for linking together and optimizing host and device code code~\cite{LLVM25}.
+Both Flang and Clang compiler drivers use the Clang Linker Wrapper tool for linking and whole-program optimizations for both host and device code~\cite{LLVM25}.
 This tool unifies the compilation procedure across hardware-specific toolchains and enables the generation of device code for multiple targets in a single compilation step.
 
 The first step of the Clang Linker Wrapper is to extract the device LLVM IR code from the object files.
 For each offload device type, the device LLVM \ac{IR} sections are combined with the LLVM \ac{IR} OpenMP device \ac{RTL} code.
 Then, the LLVM \ac{IR} code is optimized using \ac{LTO} passes~\cite{clangLinkerWrapper}.
-One of the optimization passes is the \ac{IPO} \textit{OpenMPOpt} pass, which understands the role of OpenMP runtime functions and can safely reduce OpenMP overhead~\cite{OpenMPOpt}.
-The optimized device LLVM \ac{IR} is lowered into device-specific assembly, optimized by target-specific processes, and then embedded back into the host code before linking with other host libraries.
+One of the optimization passes is the \ac{IPO} pass \textit{OpenMPOpt}, which recognizes invocations of the OpenMP runtime \ac{API} functions and can reduce OpenMP overhead~\cite{OpenMPOpt}.
+The optimized device LLVM \ac{IR} is finally lowered into device-specific assembly, optimized by target-specific processes, and then embedded back into the host code before linking with other host libraries.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -572,10 +575,10 @@ The Fortran \code{DO CONCURRENT}~\cite{F2023} construct allows users to write lo
 \label{lst:DCOMPDeviceExample}
 \end{listing}
 
-The \code{-fdo-concurrent-to-openmp} compiler option selects the compilation target for \code{DO CONCURRENT} loops.
+With the \code{-fdo-concurrent-to-openmp} compiler option of AMD Flang, users can select the compilation target for \code{DO CONCURRENT} loops.
 The flag takes one of three possible arguments: \code{host}, \code{device}, or \code{none}.
 Setting it to \code{host} or \code{device} tells the compiler that \code{DO CONCURRENT} loops should run in parallel on the CPU or the GPU, respectively.
-The user can set the flag to \code{none} to prevent parallelization altogether.
+Users can use \code{none} to prevent parallelization altogether.
 Depending on the given command line flag, a different code translation from \ac{FIR} to the OpenMP \ac{IR} dialect is selected.
 
 % This level of control is enabled by \ac{MLIR}'s ability to model program semantics using different dialects and to map or rewrite these program constructs from one dialect to another if needed.
