@@ -668,7 +668,7 @@ The bottom item in the above list is the simplest case and the \code{loop} direc
 However, the AMD Flang compiler converts such \code{loop} directives to a corresponding OpenMP \code{simd} constructs (see Listing \ref{lst:LoopDirSIMDExample}).
 The compiler (1) creates a new \code{omp.simd} \ac{MLIR} operation, (2) transfers the loop's body and attached clauses (i.e., \code{private} and \code{reduction}) to the new operation, and (3) deletes the original \code{omp.loop} operation.
 
-Binding the \code{loop} directive to a \code{parallel} region (e.g., through tightly nesting the \code{loop} directive inside a \code{parallel} directive) results in different handling of the \code{omp.loop} op by the compiler.
+Binding the \code{loop} directive to a \code{parallel} region (results in different handling of the \code{omp.loop} operation by the compiler.
 Listing \ref{lst:LoopDirWSLoopExample} demonstrates this scenario where the same \code{omp.loop} in Listing \ref{lst:LoopDirMLIRExample} is now mapped to an \code{omp.wsloop} (i.e. a work-sharing loop) operation.
 To perform this transformation, the compiler checks the surrounding context of the input \code{omp.loop} and, if it finds that the \code{omp.loop} operation is directly nested inside of an \code{omp.parallel} operation, then the \code{loop} directive is mapped to a work-sharing loop.
 
