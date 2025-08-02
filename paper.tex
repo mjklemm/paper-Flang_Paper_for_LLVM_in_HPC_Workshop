@@ -653,8 +653,8 @@ GPU parallelization is still work-in-progress at the time of writing.
 \end{listing}
 
 An OpenMP \code{loop} construct specifies that the logical iterations of the associated loops may execute concurrently~\cite{OARB21}.
-The actual mapping/distribution of the associated loop's iterations across hardware resources depends on the region in which the \code{loop} directive is nested.
-The OpenMP specification provides three possible mappings of a \code{loop} directive:
+The actual mapping/distribution of the associated loop's iterations across hardware resources depends on the region in which the \code{loop} directive binds to.
+The OpenMP specification provides three possible bindings for a \code{loop} directive:
 \begin{itemize}
     \item When it binds to a \code{teams} region, the loop's iterations are executed by the primary threads that execute the region.
     \item When it binds to a \code{parallel} region, the loop's iterations are executed by the team of threads in the \code{parallel} region.
