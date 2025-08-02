@@ -387,7 +387,7 @@ Each list item in a \code{map} clause of a \code{target} construct is processed 
 For a given \code{map} clause, the \code{omp.map.info} operation encapsulates all the relevant information that is needed to map a variable on the device.
 This includes the \textit{map-type} modifier  (see line~\ref{ln:SaxpyMapClause} of Listing~\ref{lst:FortranExample}) as well as the base address and bounds of the data to be mapped.
 For instance, the \textit{map-type} modifier \code{to} is represented as \code{map\_clauses(to)} in lines~\ref{ln:SaxpyMapInfoXStart}--\ref{ln:SaxpyMapInfoXEnd} in Listing~\ref{lst:FortranExampleFIR}.
-The provided variable names (symbols), allow the compiler to gather the base address, type, and boundary data for the mapped data, populating the \code{var\_ptr} and \code{bounds} fields of the operation. 
+The provided variable names allow the compiler to gather the base address, type, and extends for the mapped data, populating the \code{var\_ptr} and \code{bounds} fields of the operation. 
 
 In Listing~\ref{lst:FortranExample}, it can be seen that there are variables that are referenced within the \code{target} region which do not have a corresponding \code{map} clause (e.g., \code{y} and \code{a}).
 As per the OpenMP specification~\cite{OARB24}, these variables are subject to implicit data mapping.
