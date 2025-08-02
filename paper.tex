@@ -475,7 +475,7 @@ At runtime, the offload library implementation will process the mapping informat
 For each \code{omp.map.info} statement, the compiler generates LLVM \ac{IR} code to retrieve the base pointer as well as to compute its size and offset of the data to be mapped.
 This is needed whenever the size of a data object is not statically known at compile time; for statically known information, the compiler pass computes these results ahead of time.
 For instance, the compiler emits intermediate code to access the descriptor of arrays and read the dimensionality and extent in each dimension to compute the total number of array elements.
-In \ac{FIR} this is reflected by the \code{omp.bounds} statement in lines~\ref{ln:SaxpyMapInfoXBoundsStart}--\ref{ln:SaxpyMapInfoXBoundsEnd} of Listing~\ref{lst:FortranExampleFIR} for the variable \code{x}.
+In \ac{FIR}, this is reflected by the \code{omp.bounds} statement in lines~\ref{ln:SaxpyMapInfoXBoundsStart}--\ref{ln:SaxpyMapInfoXBoundsEnd} of Listing~\ref{lst:FortranExampleFIR} for the variable \code{x}.
 In the lowered LLVM \ac{IR} code in Listing~\ref{lst:FortranExampleLLVMIR}, this corresponds to lines~\ref{ln:SaxpyLLVMIRBoundsXStart}--\ref{ln:SaxpyLLVMIRBoundsXEnd}.
 
 % The calculation for the size of the data (in bytes) being mapped is trivial for non-arrays... . 
