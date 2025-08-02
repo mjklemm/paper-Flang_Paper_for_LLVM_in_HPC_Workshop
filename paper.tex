@@ -399,10 +399,11 @@ At this stage the compiler has knowledge of what symbols have already been mappe
 
 To generate the \code{omp.map.info} operation for a symbol, the compiler visits all of the symbols referenced within the \code{target} region and determines if they already appear in a \code{omp.map.info} operation (due to an explicit \code{map} clause or another \code{omp.map.info}-generating clauses). 
 If not, the compiler begins the process of generating one, similar to what it would do for an explicit \code{map} clause.
-The main difference is that the compiler must infer the correct \code{map\_type}, which in the explicit case is specified by the user on the \code{map} clause; in the implicit case it is the specified default behavior as per the OpenMP specification.
+The main difference is that the compiler must infer the correct \code{map\_type}, which in the explicit case is specified by the user on the \code{map} clause.
+In the implicit case, it is the specified default behavior as per the OpenMP specification.
 For example, Fortran arrays are treated as if they appeared in a \code{map} clause with a \code{map\_type} of \code{tofrom} (see Listing~\ref{lst:FortranExampleFIR}, lines~\ref{ln:SaxpyMapInfoImplicitArrayStart}--\ref{ln:SaxpyMapInfoImplicitArrayEnd}).
 Fortran scalar data is treated as if they were specified with \code{map(to:...)} and a \code{firstprivate} clause.
-This can be viewed as pass-by-copy, which results in giving them a \code{map\_type} of \code{to} and a \code{capture} field of \code{ByCopy} (see Listing~\ref{lst:FortranExampleFIR}, lines~\ref{ln:SaxpyMapInfoImplicitScalarStart}--\ref{ln:SaxpyMapInfoImplicitScalarEnd}). 
+This can be viewed as pass-by-copy, which results in marking them with a \code{map\_type} of \code{to} and a \code{capture} field of \code{ByCopy} (see Listing~\ref{lst:FortranExampleFIR}, lines~\ref{ln:SaxpyMapInfoImplicitScalarStart}--\ref{ln:SaxpyMapInfoImplicitScalarEnd}). 
 
 Additionally, \code{omp.map.info} operations are generated when allocatable variables appear in \code{private} or \code{firstprivate} clauses of the \code{target} construct.
 In such cases, the descriptor of the allocatable variable is needed on the target side for initializing the private copy, so it is essential to map it using the \code{omp.map.info} operation.
