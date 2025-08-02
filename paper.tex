@@ -354,7 +354,7 @@ Local variables introduced by clauses such as \code{private} or \code{map} are r
 This is shown by the \code{omp.parallel private(...)} clause in the same example.
 
 Contrary to the \code{hlfir} and \code{fir} dialects, even though the \code{omp} dialect features a relatively high level of abstraction, when it comes to translating \ac{MLIR} to LLVM \ac{IR}, it does not rely on conversions to other lower level dialects.
-Instead of converting to other dialects with existing paths to LLVM \ac{IR}, the \code{omp} dialect can be directly translated to LLVM \ac{IR} through the use of the \textit{OpenMPIRBuilder}.
+Instead of converting to other dialects with existing paths to LLVM \ac{IR}, the \code{omp} dialect can be directly translated to LLVM \ac{IR} through the use of the \textit{OpenMPIRBuilder} compiler component.
 This utility, which is shared with Clang, helps reuse OpenMP-specific codegen logic between both frontends.
 Once LLVM \ac{IR} is generated, this is handed to the compiler back-end for target code generation.
 
@@ -372,7 +372,7 @@ Once LLVM \ac{IR} is generated, this is handed to the compiler back-end for targ
 To generate code for device execution that adheres to the OpenMP semantics, the compiler has to perform these steps:
 
 \begin{itemize}
-\item identify implicitly and explicitly mapped variables for a \code{target} construct;
+\item identify all implicitly and explicitly mapped variables for a \code{target} construct;
 \item outline each \code{target} construct into a separate function;
 \item generate boilerplate code to invoke the outlined function and pass data-mapping information to it; and
 \item link the individual object files with host and device code to produce the final executable.
