@@ -622,6 +622,22 @@ GPU parallelization is still work-in-progress at the time of writing.
 \label{lst:LoopDirSIMDExample}
 \end{listing}
 
+An OpenMP \code{loop} construct specifies that the logical iterations of the associated loops may execute concurrently~\cite{OARB21}.
+The actual mapping/distribution of the associated loop's iterations across hardware resources depends on the region in which the \code{loop} directive binds to.
+The OpenMP specification provides three possible bindings for a \code{loop} directive:
+\begin{itemize}
+    \item When it binds to a \code{teams} region, the loop's iterations are executed by the primary threads that execute the region.
+    \item When it binds to a \code{parallel} region, the loop's iterations are executed by the team of threads in the \code{parallel} region.
+    \item Otherwise, the loop is executed by a single thread.
+\end{itemize}
+During the initial stages of the compiler pipeline, the context (or binding region) of \code{loop} directives is ignored.
+A \code{loop} directive is initially lowered as an \code{omp.loop} operation from the OpenMP \ac{MLIR} dialect (see Listings \ref{lst:LoopDirExample} and \ref{lst:LoopDirMLIRExample}).
+For brevity, describing the \code{private} clause attached to the \code{omp.loop} directive is ignored; the \code{reduction} clause is discussed in Section \ref{sec:OpenMPReduction}.
+
+The bottom item in the above list is the simplest case and the \code{loop} directives could be treated as a serial loop.
+However, the AMD Flang compiler converts such \code{loop} directives to a corresponding OpenMP \code{simd} constructs (see Listing \ref{lst:LoopDirSIMDExample}).
+The compiler (1) creates a new \code{omp.simd} \ac{MLIR} operation, (2) transfers the loop's body and attached clauses (i.e., \code{private} and \code{reduction}) to the new operation, and (3) deletes the original \code{omp.loop} operation.
+
 \begin{listing}[t]
 \inputminted{MLIR-lexer.py:MlirLexer -x}{code/loop_dir_wsloop.mlir}
 \caption{Listing~\ref{lst:LoopDirMLIRExample} after lowering to a work-sharing loop.}
@@ -651,22 +667,6 @@ GPU parallelization is still work-in-progress at the time of writing.
 \caption{Listing~\ref{lst:LoopDirTeamsExample2} after lowering.}
 \label{lst:LoopDirTeamsMLIRExample2}
 \end{listing}
-
-An OpenMP \code{loop} construct specifies that the logical iterations of the associated loops may execute concurrently~\cite{OARB21}.
-The actual mapping/distribution of the associated loop's iterations across hardware resources depends on the region in which the \code{loop} directive binds to.
-The OpenMP specification provides three possible bindings for a \code{loop} directive:
-\begin{itemize}
-    \item When it binds to a \code{teams} region, the loop's iterations are executed by the primary threads that execute the region.
-    \item When it binds to a \code{parallel} region, the loop's iterations are executed by the team of threads in the \code{parallel} region.
-    \item Otherwise, the loop is executed by a single thread.
-\end{itemize}
-During the initial stages of the compiler pipeline, the context (or binding region) of \code{loop} directives is ignored.
-A \code{loop} directive is initially lowered as an \code{omp.loop} operation from the OpenMP \ac{MLIR} dialect (see Listings \ref{lst:LoopDirExample} and \ref{lst:LoopDirMLIRExample}).
-For brevity, describing the \code{private} clause attached to the \code{omp.loop} directive is ignored; the \code{reduction} clause is discussed in Section \ref{sec:OpenMPReduction}.
-
-The bottom item in the above list is the simplest case and the \code{loop} directives could be treated as a serial loop.
-However, the AMD Flang compiler converts such \code{loop} directives to a corresponding OpenMP \code{simd} constructs (see Listing \ref{lst:LoopDirSIMDExample}).
-The compiler (1) creates a new \code{omp.simd} \ac{MLIR} operation, (2) transfers the loop's body and attached clauses (i.e., \code{private} and \code{reduction}) to the new operation, and (3) deletes the original \code{omp.loop} operation.
 
 Binding the \code{loop} directive to a \code{parallel} region results in different handling of the \code{omp.loop} operation.
 Listing \ref{lst:LoopDirWSLoopExample} demonstrates this scenario where the same \code{omp.loop} in Listing \ref{lst:LoopDirMLIRExample} is now mapped to an \code{omp.wsloop} (i.e., a work-sharing loop) operation.
