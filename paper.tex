@@ -599,7 +599,7 @@ The transformation pass that does the actual conversion from Fortran-specific co
 Setting the \code{-fdo-concurrent-to-openmp} flag to \code{device} instead allows the user to map the loop to the device rather than the host.
 Inside the compiler, this is done by rewriting the loop to the equivalent OpenMP constructs that launch a kernel on the GPU device that shares the iterations of the loop among the GPU's compute units (Listing~\ref{lst:DCOMPDeviceExample}).
 
-The results of automatically parallelizing \code{DO CONCURRENT} on the CPU were reported in \cite{rouson2025automatically}.
+Initial results of automatically parallelizing \code{DO CONCURRENT} on the CPU were reported in \cite{rouson2025automatically}.
 GPU parallelization is still work-in-progress at the time of writing.
 
 \subsection{Transforming the OpenMP \code{loop} directive}
@@ -622,6 +622,22 @@ GPU parallelization is still work-in-progress at the time of writing.
 \label{lst:LoopDirSIMDExample}
 \end{listing}
 
+An OpenMP \code{loop} construct specifies that the logical iterations of the associated loops may execute concurrently~\cite{OARB21}.
+The actual mapping/distribution of the associated loop's iterations across hardware resources depends on the region in which the \code{loop} directive binds to.
+The OpenMP specification provides three possible bindings for a \code{loop} directive:
+\begin{itemize}
+    \item When it binds to a \code{teams} region, the loop's iterations are executed by the primary threads that execute the region.
+    \item When it binds to a \code{parallel} region, the loop's iterations are executed by the team of threads in the \code{parallel} region.
+    \item Otherwise, the loop is executed by a single thread.
+\end{itemize}
+During the initial stages of the compiler pipeline, the context (or binding region) of \code{loop} directives is ignored.
+A \code{loop} directive is initially lowered as an \code{omp.loop} operation from the OpenMP \ac{MLIR} dialect (see Listings \ref{lst:LoopDirExample} and \ref{lst:LoopDirMLIRExample}).
+For brevity, describing the \code{private} clause attached to the \code{omp.loop} directive is ignored; the \code{reduction} clause is discussed in Section \ref{sec:OpenMPReduction}.
+
+The bottom item in the above list is the simplest case and the \code{loop} directives could be treated as a serial loop.
+However, the AMD Flang compiler converts such \code{loop} directives to a corresponding OpenMP \code{simd} constructs (see Listing \ref{lst:LoopDirSIMDExample}).
+The compiler (1) creates a new \code{omp.simd} \ac{MLIR} operation, (2) transfers the loop's body and attached clauses (i.e., \code{private} and \code{reduction}) to the new operation, and (3) deletes the original \code{omp.loop} operation.
+
 \begin{listing}[t]
 \inputminted{MLIR-lexer.py:MlirLexer -x}{code/loop_dir_wsloop.mlir}
 \caption{Listing~\ref{lst:LoopDirMLIRExample} after lowering to a work-sharing loop.}
@@ -640,6 +656,26 @@ GPU parallelization is still work-in-progress at the time of writing.
 \label{lst:LoopDirTeamsMLIRExample1}
 \end{listing}
 
+Binding the \code{loop} directive to a \code{parallel} region results in different handling of the \code{omp.loop} operation.
+Listing \ref{lst:LoopDirWSLoopExample} demonstrates this scenario where the same \code{omp.loop} in Listing \ref{lst:LoopDirMLIRExample} is now mapped to an \code{omp.wsloop} (i.e., a work-sharing loop) operation.
+To perform this transformation, the compiler checks the surrounding context of the input \code{omp.loop} and, if it finds that the \code{omp.loop} operation is directly nested inside of an \code{omp.parallel} operation, then the \code{loop} directive is mapped to a work-sharing loop.
+
+Handling the case where a \code{loop} directive binds to a \code{teams} region is more involved than the previous two cases.
+To gain the most performance, a \code{loop} directive could be mapped to a \code{distribute parallel do} composite construct.
+However, this mapping is not always possible or safe to do.
+In such cases, the compiler simply maps the \code{loop} directive to the \code{distribute} construct.
+A \code{loop} construct with \code{teams} binding can be mapped to \code{distribute parallel do} only if
+\begin{itemize}
+    \item it does not enclose another work-sharing loop; and
+    \item it does not contain calls to functions that might themselves have nested parallelism.
+\end{itemize}
+
+Both restrictions are imposed to prevent nesting work-sharing loops.
+At the time of writing, the first restriction is satisfied if a \code{loop} directive has \code{parallel} binding, whereas the second is satisfied if a call to a non-OpenMP runtime API is found in the loop's body.
+Both restrictions can be made more general.
+Listings \ref{lst:LoopDirTeamsExample1} and \ref{lst:LoopDirTeamsMLIRExample1} show an example where a \code{loop} directive can be mapped to a work-sharing loop due to not meeting any of the restrictions above.
+Listings \ref{lst:LoopDirTeamsExample2} and \ref{lst:LoopDirTeamsMLIRExample2} show an example where a call to an unknown function \code{foo} inhibits converting the \code{loop} to a work-sharing loop.
+
 \begin{listing}[t]
 \inputminted{Fortran}{code/loop_dir_teams_2.f90}
 \caption{Example Fortran code with the OpenMP \code{loop} directive that cannot be mapped to a work-sharing loop.}
@@ -652,40 +688,6 @@ GPU parallelization is still work-in-progress at the time of writing.
 \label{lst:LoopDirTeamsMLIRExample2}
 \end{listing}
 
-An OpenMP \code{loop} construct specifies that the logical iterations of the associated loops may execute concurrently~\cite{OARB21}.
-The actual mapping/distribution of the associated loop's iterations across hardware resources depends on the region in which the \code{loop} directive is nested.
-The OpenMP specification provides three possible mappings of a \code{loop} directive:
-\begin{itemize}
-    \item When it binds to a \code{teams} region, the loop's iterations are executed by the primary threads that execute the region.
-    \item When it binds to a \code{parallel} region, the loop's iterations are executed by the team of threads in the \code{parallel} region.
-    \item Otherwise, the loop is executed by a single thread.
-\end{itemize}
-During the initial stages of the compiler pipeline, the context (or binding region) of \code{loop} directives is ignored.
-A \code{loop} directive is initially lowered as an \code{omp.loop} operation from the OpenMP \ac{MLIR} dialect (see Listings \ref{lst:LoopDirExample} and \ref{lst:LoopDirMLIRExample}).
-For brevity, describing the \code{private} clause attached to the \code{omp.loop} directive is ignored; the \code{reduction} clause is discussed in Section \ref{sec:OpenMPReduction}.
-
-Starting from the bottom item in the above list since it is the simplest case; \code{loop} directives could be simply serialized.
-However, the AMD Flang compiler takes this a step further by converting \code{loop} directives in this case to corresponding OpenMP \code{simd} constructs (see Listing \ref{lst:LoopDirSIMDExample}).
-The compiler (1) creates a new \code{omp.simd} \ac{MLIR} operation, (2) transfers the loop's body and attached clauses (i.e., \code{private} and \code{reduction}) to the new operation, and (3) deletes the original \code{omp.loop} operation.
-Binding the \code{loop} directive to a \code{parallel} region (e.g., through tightly nesting the \code{loop} directive inside a \code{parallel} directive) results in different handling of the \code{omp.loop} op by the compiler.
-Listing \ref{lst:LoopDirWSLoopExample} demonstrates this scenario where the same \code{omp.loop} in Listing \ref{lst:LoopDirMLIRExample} is now mapped to an \code{omp.wsloop} (i.e. a work-sharing loop) operation.
-To perform this transformation, the compiler checks the surrounding context of the input \code{omp.loop} and, if it finds that the \code{omp.loop} operation is directly nested inside of an \code{omp.parallel} operation, then the \code{loop} directive is mapped to a work-sharing loop.
-
-Handling the case where a \code{loop} directive binds to a \code{teams} region is more involved than the previous two cases.
-To gain the most performance, a \code{loop} directive could be mapped to the \code{distribute parallel do} OpenMP composite construct.
-However, this mapping is not always possible or safe to do.
-In such cases, the compiler simply maps the \code{loop} directive to the \code{distribute} construct.
-A \code{loop} construct with \code{teams} binding can be mapped to \code{distribute parallel do} only if:
-\begin{itemize}
-    \item it does not enclose another work-sharing loop; and
-    \item it does not contain calls to functions that might themselves have nested parallelism.
-\end{itemize}
-Both restrictions are imposed to prevent nesting work-sharing loops.
-At the time of writing, the first restriction is satisfied if a \code{loop} directive has \code{parallel} binding, whereas the second is satisfied if a call to a non-OpenMP runtime API is found in the loop's body.
-Both restrictions can be made more general.
-Listings \ref{lst:LoopDirTeamsExample1} and \ref{lst:LoopDirTeamsMLIRExample1} show an example where a \code{loop} directive can be mapped to a work-sharing loop due to not meeting any of the restrictions above.
-Listings \ref{lst:LoopDirTeamsExample2} and \ref{lst:LoopDirTeamsMLIRExample2} show an example where a call to an unknown function \code{foo} inhibits converting the \code{loop} to a work-sharing loop.
-
 Both transformations presented in Section~\ref{sec:DCPar} and in this section are examples of internal (i.e., \ac{MLIR} to \ac{MLIR}) transformations performed by the AMD Flang compiler. However, a few differences between the two stand out:
 \begin{itemize}
     \item the former is driven by the user through a compiler flag while the latter is driven automatically by the compiler based on the nesting context/region; and
@@ -694,14 +696,14 @@ Both transformations presented in Section~\ref{sec:DCPar} and in this section ar
 
 \subsection{Lowering of intrinsic arithmetic and mathematical functions to the GPU}
 \label{sec:FortranIntrinsics}
-Lowering of calls to intrinsic math functions is done via the \ac{MLIR} math dialect.
+Lowering of calls to math functions is done via the \ac{MLIR} math dialect~\cite{MLIRmath} that are added to the \ac{MLIR} intermediate code for Fortran math intrinsics.
 The math dialect operations are then lowered to calls to the ROCm\trademark math library or to LLVM \ac{IR} intrinsics if the operations are directly supported by the AMD GPU backend.
 For complex types the intrinsic function calls are translated to the complex dialect and then lowered to ROCm\trademark math library calls.
-The reason for going through the math and complex dialects instead of directly generating calls to \textit{libm} is that there is currently no \textit{libm} library available for the AMD GPU target and the ROCm\trademark math library function names differ from the \textit{libm} names. Another benefit is to allow more optimizations in \ac{MLIR} (e.g., constant folding).
+The reason for going through the math and complex dialects instead of directly generating calls to \textit{libm} is that there is currently no \textit{libm} library available for the AMD GPU target and the ROCm\trademark math library function names differ from the \textit{libm} names. Another benefit is to allow more optimizations in \ac{MLIR} (e.g., constant folding or strength reduction).
 
 \subsection{Handling Fortran arrays}
-The Fortran language allows for declaring static and dynamic multi-dimensional arrays, bounds of which can be described by both positive and negative integers~\cite{F2023}.
-In comparison to static arrays, which size needs to be determined at compilation time, the shape of dynamic arrays is set up during program runtime.
+The Fortran language allows for declaring static and dynamic multi-dimensional arrays with bounds that may consist of positive and negative integers~\cite{F2023}.
+In comparison to static arrays, for which the size can be determined at compilation time, the shape of dynamic arrays is set up during program runtime.
 Listing \ref{lst:ArrayExample} presents an exemplary Fortran code that uses both types of arrays.
 
 \begin{listing}[t]
