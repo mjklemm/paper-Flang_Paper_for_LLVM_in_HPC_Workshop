@@ -599,7 +599,7 @@ The transformation pass that does the actual conversion from Fortran-specific co
 Setting the \code{-fdo-concurrent-to-openmp} flag to \code{device} instead allows the user to map the loop to the device rather than the host.
 Inside the compiler, this is done by rewriting the loop to the equivalent OpenMP constructs that launch a kernel on the GPU device that shares the iterations of the loop among the GPU's compute units (Listing~\ref{lst:DCOMPDeviceExample}).
 
-The results of automatically parallelizing \code{DO CONCURRENT} on the CPU were reported in \cite{rouson2025automatically}.
+Initial results of automatically parallelizing \code{DO CONCURRENT} on the CPU were reported in \cite{rouson2025automatically}.
 GPU parallelization is still work-in-progress at the time of writing.
 
 \subsection{Transforming the OpenMP \code{loop} directive}
