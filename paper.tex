@@ -286,7 +286,7 @@ Section~\ref{sec:CompilerTransOpenMP} then describes select code transformations
 
 At the time of writing this paper, the AMD Fortran compiler toolchain is undergoing a transition.
 AMD is developing the AMD Next Generation Fortran compiler (``AMD Flang'') that will eventually replace the existing AMD Fortran Compiler for the AMD ROCm\trademark platform.
-While the current Fortran compiler that ships with the AMD ROCm\trademark package is based on the PGI\registered compiler code~\cite{Lara17,Pric17}, the AMD Next Generation Fortran Compiler is based on the LLVM Flang compiler~\cite{LLVM25}.
+While the current Fortran compiler that ships with the AMD ROCm\trademark package is based on the PGI\registered compiler~\cite{Lara17,Pric17}, the AMD Next Generation Fortran Compiler is based on the LLVM Flang compiler~\cite{LLVM25}.
 As a result, AMD Flang is able to take advantage of the OpenMP code generation capabilities already implemented in the LLVM compiler suite as part of its support for its C / C++ front-end called Clang.
 As of this writing, shared capabilities include the ability to invoke GPU (offloaded) kernels, LLVM metadata generation, and code generation for OpenMP reductions.
 This list is not exhaustive, and it continues to grow. Increased code reuse brings with it the implicit benefit of wider testing coverage.
@@ -333,11 +333,11 @@ The OpenMP constructs in the program are represented using operations from the O
 This initial mix of \ac{MLIR} operations produced by the AMD Flang front-end then goes through multiple dialect conversion and transformation passes, which result in a final \ac{MLIR} module mainly holding \code{llvm}, \code{omp} and other low-level dialect operations for which direct translations to LLVM \ac{IR} are defined.
 For example, the \code{DO} loop nest in Listing~\ref{lst:FortranExample} is expressed using \code{omp} dialect constructs that correspond to the OpenMP \code{target teams loop} construct as shown in Listing~\ref{lst:FortranExampleFIR}.
 
-The \code{omp} dialect is designed to follow the directives and clauses defined by the OpenMP specification, so the \ac{MLIR} representation closely resembles the structure of the original program in a relatively high-level way.
+The \code{omp} dialect is designed to represent the directives and clauses defined by the OpenMP specification, so the \ac{MLIR} representation closely resembles the structure of the original program at a high-level.
 Generally, each operation corresponds to a single directive, which can take multiple arguments to represent the various clauses supported by it.
-A structured block associated to an OpenMP construct is represented in \ac{MLIR} through a region owned by that operation, which results in nesting resembling the original program (e.g., see line~\ref{ln:SaxpyTargetStart} of Listing~\ref{lst:FortranExampleFIR}).
+A structured block associated with an OpenMP construct is represented in \ac{MLIR} through a region owned by that operation, resulting in a nesting structure that resembles the original program (e.g., see line~\ref{ln:SaxpyTargetStart} of Listing~\ref{lst:FortranExampleFIR}).
 Combined constructs are split into each of their constituent parts while attaching the applicable clauses (explicit or implicit) to each leaf operation.
-Loop-associated constructs are represented in the \code{omp} dialect by ``loop wrappers'', which are operations meeting stringent criteria:
+Loop-associated constructs are represented in the \code{omp} dialect by ``loop wrappers'', which are operations that meet stringent criteria:
 
 \begin{itemize}
     \item they must have exactly one child operation;
