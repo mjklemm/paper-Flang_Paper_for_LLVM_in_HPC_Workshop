@@ -592,8 +592,10 @@ How this loop is further lowered by the compiler can be controlled by the \code{
 For example, setting the flag to \code{host}, the \ac{FIR} and \ac{HLFIR} in Listing~\ref{lst:DCFIRExample} is lowered to an equivalent OpenMP program that parallelizes the loop on the CPU (Listing~\ref{lst:DCOMPExample}).
 The transformed IR is mix of the three dialects: \code{fir}, \code{hlfir}, and \code{omp}.
 Note, in particular, that the loop's body is not affected by the transformation; only the constructs that control how that loop will be executed.
+
 The advantage of such progressive lowering is that the compiler can maintain the original program semantics as much as needed within the pipeline, which allows easier analyses and transformations.
 The transformation pass that does the actual conversion from Fortran-specific constructs to OpenMP ones can be plugged into the compiler pipeline as late as needed, which allows Fortran-specific passes to finish their work before transforming \code{DO CONCURRENT} loops from the Fortran domain to the OpenMP domain.
+
 Setting the \code{-fdo-concurrent-to-openmp} flag to \code{device} instead allows the user to map the loop to the device rather than the host.
 Inside the compiler, this is done by rewriting the loop to the equivalent OpenMP constructs that launch a kernel on the GPU device that shares the iterations of the loop among the GPU's compute units (Listing~\ref{lst:DCOMPDeviceExample}).
 
