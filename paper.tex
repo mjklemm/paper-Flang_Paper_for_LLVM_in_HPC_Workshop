@@ -372,9 +372,9 @@ Once LLVM \ac{IR} is generated, this is handed to the compiler back-end for targ
 To generate code for device execution that adheres to the OpenMP semantics, the compiler has to perform these steps:
 
 \begin{itemize}
-\item identify all implicitly and explicitly mapped variables for a \code{target} construct;
-\item outline each \code{target} construct into a separate function;
-\item generate boilerplate code to invoke the outlined function and pass data-mapping information to it; and
+\item identify all implicitly and explicitly mapped variables for \code{target} constructs;
+\item outline \code{target} constructs into a separate functions;
+\item generate boilerplate code to invoke the outlined functions and pass data-mapping information to them; and
 \item link the individual object files with host and device code to produce the final executable.
 \end{itemize}
 
