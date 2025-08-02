@@ -417,7 +417,7 @@ There is one invocation of the compiler front-end for the host device and also o
 This results in multiple independent \ac{MLIR} modules obtained from the same source code, each holding an attribute that lowering and transformation passes use to produce compatible host and device LLVM \ac{IR}.
 
 Target device modules are pruned early on in the process, removing all host-only functions except those holding target regions inside.
-When compiling for a target device, at the \ac{MLIR} to LLVM \ac{IR} translation step, \code{omp.target} operations are identified and extracted from the host function where they are located into a new one.
+When compiling for a target device, at the \ac{MLIR}-to-LLVM \ac{IR} translation step, \code{omp.target} operations are identified and extracted from the host function where they are located into a new, outlined function.
 These new outlined kernels, whose parameter list is based on the variables mapped into the target region, together with other device functions, are the only ones that remain in the resulting LLVM \ac{IR} module.
 Host compilation (shown in Listing~\ref{lst:FortranExampleLLVMIR}) performs this kernel outlining process as well, but it maintains the original functions where target regions resided, replacing them with calls to the runtime \code{\_\_tgt\_target\_kernel} to offload their execution (lines~\ref{ln:SaxpyLLVMIRInvokeStart}--\ref{ln:SaxpyLLVMIRInvokeEnd}).
 
