@@ -664,7 +664,7 @@ During the initial stages of the compiler pipeline, the context (or binding regi
 A \code{loop} directive is initially lowered as an \code{omp.loop} operation from the OpenMP \ac{MLIR} dialect (see Listings \ref{lst:LoopDirExample} and \ref{lst:LoopDirMLIRExample}).
 For brevity, describing the \code{private} clause attached to the \code{omp.loop} directive is ignored; the \code{reduction} clause is discussed in Section \ref{sec:OpenMPReduction}.
 
-Starting from the bottom item in the above list since it is the simplest case; \code{loop} directives could be simply serialized.
+The bottom item in the above list is the simplest case and the \code{loop} directives can be simply serialized.
 However, the AMD Flang compiler takes this a step further by converting \code{loop} directives in this case to corresponding OpenMP \code{simd} constructs (see Listing \ref{lst:LoopDirSIMDExample}).
 The compiler (1) creates a new \code{omp.simd} \ac{MLIR} operation, (2) transfers the loop's body and attached clauses (i.e., \code{private} and \code{reduction}) to the new operation, and (3) deletes the original \code{omp.loop} operation.
 Binding the \code{loop} directive to a \code{parallel} region (e.g., through tightly nesting the \code{loop} directive inside a \code{parallel} directive) results in different handling of the \code{omp.loop} op by the compiler.
