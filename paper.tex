@@ -393,7 +393,8 @@ In Listing~\ref{lst:FortranExample}, it can be seen that there are variables tha
 As per the OpenMP specification~\cite{OARB24}, these variables are subject to implicit data mapping.
 The compiler must therefore analyze the code and create \code{omp.map.info} operations for these to capture the data for mapping operations. 
 In Listing~\ref{lst:FortranExampleFIR}, one example of such an implicit map is in lines~\ref{ln:SaxpyMapInfoImplicitArrayStart}--\ref{ln:SaxpyMapInfoImplicitArrayEnd} with the \code{map\_clauses(implicit, ...)} attribute for the array \code{y}.
-The capturing of variables occurs during the initial lowering of the \code{target} node after all present clauses have been processed, including any \code{map} clauses. 
+
+This capturing of implicitly mapped variables occurs during the initial lowering of the \code{target} node after all present clauses have been processed, including any \code{map} clauses. 
 At this stage the compiler has knowledge of what symbols have already been mapped to the device by the various OpenMP data movement clauses.
 
 To generate the \code{omp.map.info} operation for a symbol, the compiler visits all of the symbols referenced within the \code{target} region and determines if they already appear in a \code{omp.map.info} operation (due to an explicit \code{map} clause or another \code{omp.map.info}-generating clauses). 
