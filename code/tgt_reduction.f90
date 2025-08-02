@@ -1,5 +1,5 @@
 program reduction
-    use iso_fortran_env, only: rt-=>real64
+    use iso_fortran_env, only: rt=>real64
     implicit none
     real(kind=rt) :: s, a(10000)
     integer :: i
