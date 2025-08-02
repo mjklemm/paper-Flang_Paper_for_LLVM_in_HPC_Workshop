@@ -673,10 +673,10 @@ Listing \ref{lst:LoopDirWSLoopExample} demonstrates this scenario where the same
 To perform this transformation, the compiler checks the surrounding context of the input \code{omp.loop} and, if it finds that the \code{omp.loop} operation is directly nested inside of an \code{omp.parallel} operation, then the \code{loop} directive is mapped to a work-sharing loop.
 
 Handling the case where a \code{loop} directive binds to a \code{teams} region is more involved than the previous two cases.
-To gain the most performance, a \code{loop} directive could be mapped to the \code{distribute parallel do} OpenMP composite construct.
+To gain the most performance, a \code{loop} directive could be mapped to a \code{distribute parallel do} composite construct.
 However, this mapping is not always possible or safe to do.
 In such cases, the compiler simply maps the \code{loop} directive to the \code{distribute} construct.
-A \code{loop} construct with \code{teams} binding can be mapped to \code{distribute parallel do} only if:
+A \code{loop} construct with \code{teams} binding can be mapped to \code{distribute parallel do} only if
 \begin{itemize}
     \item it does not enclose another work-sharing loop; and
     \item it does not contain calls to functions that might themselves have nested parallelism.
