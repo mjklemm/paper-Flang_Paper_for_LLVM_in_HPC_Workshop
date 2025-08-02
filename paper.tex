@@ -696,7 +696,7 @@ Both transformations presented in Section~\ref{sec:DCPar} and in this section ar
 
 \subsection{Lowering of intrinsic arithmetic and mathematical functions to the GPU}
 \label{sec:FortranIntrinsics}
-Lowering of calls to intrinsic math functions is done via the \ac{MLIR} math dialect.
+Lowering of calls to intrinsic math functions is done via the \ac{MLIR} math dialect~\cite{MLIRmath}.
 The math dialect operations are then lowered to calls to the ROCm\trademark math library or to LLVM \ac{IR} intrinsics if the operations are directly supported by the AMD GPU backend.
 For complex types the intrinsic function calls are translated to the complex dialect and then lowered to ROCm\trademark math library calls.
 The reason for going through the math and complex dialects instead of directly generating calls to \textit{libm} is that there is currently no \textit{libm} library available for the AMD GPU target and the ROCm\trademark math library function names differ from the \textit{libm} names. Another benefit is to allow more optimizations in \ac{MLIR} (e.g., constant folding).
