@@ -465,7 +465,7 @@ This information needs to be passed to the runtime system to be able to perform 
 This is done via the \code{\%kernel\_args} argument of the \code{\_\_tgt\_target\_kernel} entry point (see Listing~\ref{lst:FortranExampleLLVMIR}).
 The data structure consists of a structure of arrays, in which each array element corresponds to a mapped object with information about base pointer of the mapped object, its size, and additional flags for data-movement direction, etc.
 The actual pointers to data that are used in the offloaded code are passed as pointer arguments to the outlined function.
-At runtime, the offload library implementation will process the mapping information passed and the outlined function can access the mapped data via the passed pointers.
+At runtime, the offload library implementation will process the mapping information provided and the outlined function can access the mapped data via the passed pointers.
 
 % During the \ac{MLIR} to LLVM \ac{IR} lowering of the \code{target} operation; prior to the generation of the kernel or entry point, the compiler gathers information from the \code{map.info} necessary for lowering of the kernel for each compiler pass. 
 % The \code{map.info} operation conveys the minimum necessary information for this stage of the lowering, each pass still must perform some processing to meet the aforementioned requirements. 
