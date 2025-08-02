@@ -712,7 +712,7 @@ Listing \ref{lst:ArrayExample} presents an exemplary Fortran code that uses both
 \label{lst:ArrayExample}
 \end{listing}
 
-Declaration of dynamic arrays are tagged with the keyword \code{allocatable}.
+For example, the declarations of dynamic arrays for the the \code{ALLOCATE} statement must be tagged with the attribute \code{ALLOCATABLE}.
 The Fortran standard guarantees that all allocatable objects are safely removed when the program goes out of the scope of the variable declaration.
 The function \code{allocate} is responsible for allocating sufficient memory for a given array shape.
 In comparison to the \code{malloc} function in the C standard library, the Fortran allocate function not only reserves required memory, but also stores information about allocated array size and base pointer in an array descriptor: a Flang runtime structure describing dynamically allocated objects.
