@@ -330,6 +330,7 @@ The \ac{PFT} contains all details about OpenMP directives, clauses, etc. as node
 The \ac{PFT} is then gradually lowered using the \ac{MLIR} infrastructure~\cite{mlir}. The initial \ac{MLIR} representation obtained from the \ac{PFT} primarily contains operations from the \ac{HLFIR} and \ac{FIR} dialects of \ac{MLIR} (prefixed respectively with \code{hlfir} and \code{fir}).
 These dialects provide operations and types that directly correspond to Fortran language concepts.
 As the name suggests, the \code{hlfir} dialect is used to express higher level semantics of Fortran (e.g., array operations that can be used to optimize Fortran array statements) along with a type system to represent Fortran attributes for (dummy) variables.
+
 The OpenMP constructs in the program are represented using operations from the OpenMP dialect (prefix \code{omp}).
 This initial mix of \ac{MLIR} operations produced by the AMD Flang front-end then goes through multiple dialect conversion and transformation passes, which result in a final \ac{MLIR} module mainly holding \code{llvm}, \code{omp} and other low-level dialect operations for which direct translations to LLVM \ac{IR} are defined.
 For example, the \code{DO} loop nest in Listing~\ref{lst:FortranExample} is expressed using \code{omp} dialect constructs that correspond to the OpenMP \code{target teams loop} construct as shown in Listing~\ref{lst:FortranExampleFIR}.
