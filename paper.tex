@@ -336,7 +336,7 @@ This initial mix of \ac{MLIR} operations produced by the AMD Flang front-end the
 For example, the \code{DO} loop nest in Listing~\ref{lst:FortranExample} is expressed using \code{omp} dialect constructs that correspond to the OpenMP \code{target teams loop} construct as shown in Listing~\ref{lst:FortranExampleFIR}.
 
 The \code{omp} dialect is designed to represent the directives and clauses defined by the OpenMP specification, so the \ac{MLIR} representation closely resembles the structure of the original program at a high-level.
-Typically, each operation corresponds to a single OpenMP directive, which can accepts multiple, some even optional, arguments to represent the various clauses supported by the corresponding directive.
+Typically, each operation corresponds to a single OpenMP directive which can accept multiple, some even optional, arguments to represent the various clauses supported by the corresponding directive.
 A structured block associated with an OpenMP construct is represented in \ac{MLIR} by way of a region owned by that operation, resulting in a nesting structure that resembles the original program (e.g., see line~\ref{ln:SaxpyTargetStart} of Listing~\ref{lst:FortranExampleFIR}).
 Combined constructs are split into each of their constituent parts while attaching the applicable clauses (explicit or implicit) to each leaf operation.
 Loop-associated constructs are represented in the \code{omp} dialect by ``loop wrappers'', which are operations that meet stringent criteria:
@@ -383,21 +383,21 @@ We will provide an overview of the above steps throughout the remainder of this 
 \subsection{OpenMP Data Mapping Analysis}
 \label{sec:OpenMPDataMappingAnalysis}
 
-Each list item in a \code{map} clause of a \code{target} construct is processed individually to produce a corresponding \code{omp.map.info} operation in the intermediate representation. 
-For a given \code{map} clause, the \code{omp.map.info} operation encapsulates all the relevant information that is needed to map a variable on the device.
+When offloading to a GPU using OpenMP, data to be transferred to and from the GPU needs to be ``mapped'' by the host via the run-time library. Broadly, there are two modes of mapping - Explicit and Implicit. Explicit mapping happens by way of the use of the OpenMP \code{map} clause on directives that accept it. Each list item in a \code{map} clause of a \code{target} construct is processed individually to produce a corresponding \code{omp.map.info} operation in the \ac{IR}. 
+For a given \code{map} clause, the \code{omp.map.info} operation encapsulates all the relevant information that is needed to map that variable on the device.
 This includes the \textit{map-type} modifier  (see line~\ref{ln:SaxpyMapClause} of Listing~\ref{lst:FortranExample}) as well as the base address and bounds of the data to be mapped.
 For instance, the \textit{map-type} modifier \code{to} is represented as \code{map\_clauses(to)} in lines~\ref{ln:SaxpyMapInfoXStart}--\ref{ln:SaxpyMapInfoXEnd} in Listing~\ref{lst:FortranExampleFIR}.
-The provided variable names allow the compiler to gather the base address, type, and extents for the mapped data, populating the \code{var\_ptr} and \code{bounds} fields of the operation. 
+The variables names provided allow the compiler to gather the base address, type, and extents for the mapped data, populating, respectively, the \code{var\_ptr} and \code{bounds} fields of the operation. 
 
 In Listing~\ref{lst:FortranExample}, it can be seen that there are variables that are referenced within the \code{target} region which do not have a corresponding \code{map} clause (e.g., \code{y} and \code{a}).
-As per the OpenMP specification~\cite{OARB24}, these variables are subject to implicit data mapping.
+As per the OpenMP specification~\cite{OARB24}, these are said to be implicitly mapped variables  and are subject to the rules of implicit data mapping.
 The compiler must therefore analyze the code and create \code{omp.map.info} operations for these to capture the data for mapping operations. 
 In Listing~\ref{lst:FortranExampleFIR}, one example of such an implicit map is in lines~\ref{ln:SaxpyMapInfoImplicitArrayStart}--\ref{ln:SaxpyMapInfoImplicitArrayEnd} with the \code{map\_clauses(implicit, ...)} attribute for the array \code{y}.
 
-This capturing of implicitly mapped variables occurs during the initial lowering of the \code{target} node after all present clauses have been processed, including any \code{map} clauses. 
+During initial lowering of the \code{target} node, after all clauses attached to the \code{target} node have been processed, \code{omp.map.info} operations are generated for implicitly mapped variables, if any.
 At this stage the compiler has knowledge of what symbols have already been mapped to the device by the various OpenMP data movement clauses.
 
-To generate the \code{omp.map.info} operation for a symbol, the compiler visits all of the symbols referenced within the \code{target} region and determines if they already appear in a \code{omp.map.info} operation (due to an explicit \code{map} clause or another \code{omp.map.info}-generating clauses). 
+To generate the \code{omp.map.info} operation for a symbol, the compiler visits all of the symbols referenced within the \code{target} region and determines if they already appear in a \code{omp.map.info} operation (due to an explicit \code{map} clause or a \code{omp.map.info}-generating clauses). 
 If not, the compiler begins the process of generating one, similar to what it would do for an explicit \code{map} clause.
 The main difference is that the compiler must infer the correct \code{map\_type}, which in the explicit case is specified by the user on the \code{map} clause.
 In the implicit case, it is the specified default behavior as per the OpenMP specification.
@@ -418,7 +418,7 @@ This results in multiple independent \ac{MLIR} modules obtained from the same so
 
 Target device modules are pruned early on in the process, removing all host-only functions except those holding target regions inside.
 When compiling for a target device, at the \ac{MLIR}-to-LLVM \ac{IR} translation step, \code{omp.target} operations are identified and extracted from the host function where they are located into a new, outlined function.
-These outlined kernels, whose parameter list is based on the variables mapped into the target region, together with other device functions, are the only ones that remain in the resulting LLVM \ac{IR} module.
+These outlined kernels, whose parameter list is based on the variables mapped to the target region (see Section~\ref{sec:OpenMPDataMappingAnalysis}), together with other device functions, are the only ones that remain in the resulting LLVM \ac{IR} module.
 Host compilation (shown in Listing~\ref{lst:FortranExampleLLVMIR}) performs this kernel outlining process as well, but it maintains the original functions where target regions resided, replacing them with calls to the runtime entry point \code{\_\_tgt\_target\_kernel} to offload their execution (lines~\ref{ln:SaxpyLLVMIRInvokeStart}--\ref{ln:SaxpyLLVMIRInvokeEnd}).
 
 Whenever a kernel launch fails, the outlined host implementation for that target region is executed as a fallback (lines~\ref{ln:SaxpyLLVMIRHostStart}--\ref{ln:SaxpyLLVMIRHostEnd}).
@@ -448,7 +448,17 @@ The resulting host and device LLVM modules are later linked together following t
 
 % This involves generated code to perform data mapping according to the OpenMP semantics and code to invoke the kernel on the GPU via the runtime libraries. 
 
-\todo{Kareem to expand on the late vs. early outling - 1 paragraph.}
+\subsection{Early vs. late outlining}
+
+\ac{MLIR} allows one \ac{IR} module to embed constructs which belong to different levels of abstraction, different programming models (e.g. serial and parallel constructs), and even constructs that will be executed on different hardware targets (e.g., CPU, GPU, or other accelerators).
+The LLVM Flang compiler exploits this capability by embedding OpenMP constructs that are to be executed on the GPU inside the host context (parent host functions) where these constructs were written by the programmer.
+Such surrounding host context provides compiler analyses and optimizations with a holistic view of the input program; enabling such passes to work across device boundaries when suitable.
+For example, optimizations such as constant propagation and different canonicalization passes can work across the CPU-GPU boundary to save unnecessary mapping of memory from the CPU to the GPU.
+Such nesting of constructs belonging to different hardware devices can be maintained throughout the compiler pipeline as late as needed.
+In LLVM Flang's case, such late outlining of GPU kernels and functions takes place only when the compiler converts \ac{MLIR} to LLVM \ac{IR}.
+This form of late outlining is different from other OpenMP compilers such as Clang.
+In Clang, the front-end is responsible for outlining device kernels at the very start of the lowering process to LLVM \ac{IR}.
+
 % The outlining process in LLVM Flang is a form of late outlining, where the primary differentiation between host and device code occurs late in the compilation pipeline when the compiler is converting from \ac{MLIR} to LLVM \ac{IR}. 
 % The code to be outlined as kernels are marked by the aforementioned OpenMP specification's \code{target} directive. 
 % This directive can be combined with several other directives and clauses to make complex but performant programs. 
@@ -683,7 +693,7 @@ Listings \ref{lst:LoopDirTeamsExample2} and \ref{lst:LoopDirTeamsMLIRExample2} s
 \end{listing}
 
 \begin{listing}[t]
-\inputminted{MLIR-lexer.py:MlirLexer -x}{code/loop_dir_teams_1.mlir}
+\inputminted{MLIR-lexer.py:MlirLexer -x}{code/loop_dir_teams_2.mlir}
 \caption{Listing~\ref{lst:LoopDirTeamsExample2} after lowering.}
 \label{lst:LoopDirTeamsMLIRExample2}
 \end{listing}
@@ -714,9 +724,9 @@ Listing \ref{lst:ArrayExample} presents an exemplary Fortran code that uses both
 
 For example, one way of using of dynamic arrays in Fortran is via the attribute \code{ALLOCATABLE} and the \code{ALLOCATE} statement.
 The Fortran standard guarantees that all allocatable objects are safely removed when the program goes out of the scope of the variable declaration.
-The function \code{ALLOCATE} statement is responsible for allocating sufficient memory for a given array shape.
-In comparison to the \code{malloc} function in the C standard library, the Fortran allocate function not only reserves required memory, but also stores information about the allocated array size and base pointer in an array descriptor.
-Static arrays and assumed-size arrays do not require descriptors because information about the shape of the array is defined in Fortran source code such that t he the AMD Flang compiler can calculate the addresses of array elements using pointer arithmetic without loading data from an array descriptor.
+The \code{ALLOCATE} statement is responsible for allocating sufficient memory for a given array shape.
+In comparison to the \code{malloc} function in the C standard library, the Fortran \code{ALLOCATE} statement not only reserves required memory, but also stores information about the allocated array size and base pointer in an array descriptor.
+Static arrays and assumed-size arrays do not require descriptors because information about the shape of the array is defined in Fortran source code such that the AMD Flang compiler can calculate the addresses of array elements using pointer arithmetic without loading data from an array descriptor.
 
 The reference to array elements is denoted in the same way for static and dynamic arrays in the Fortran source code.
 Despite the same notation, the generated code is different.
@@ -816,19 +826,19 @@ The result of this transformation is shown in Listing \ref{lst:TempArrayStackExa
 \section{Conclusions}
 \label{sec:Conclusions}
 
-\todo{
-Dan to write this part - 2 paragraphs
-\begin{itemize}
-    \item Short summary of the paper - 1 paragraph
-    \item Future work - 1 paragraph
-    \begin{itemize}
-        \item Implement missing OpenMP features up to OpenMP 6.0, give few examples
-        \item Finish DO CONCURRENT
-        \item Performance improvements
-    \end{itemize}
-    \item Upstream implementation to LLVM project 
-\end{itemize}
-}
+The addition of OpenMP offload support greatly expands the utility of the AMD Next Generation Fortran Compiler.
+By focusing on the most important functionality first, the work described in this paper has already enabled many \ac{HPC} applications of various domains.
+Application developers can now use OpenMP \code{target} directives in AMD Flang to easily accelerate their applications by offloading computation to \acp{GPU}.
+
+Since the AMD Next Generation Fortran Compiler is open source and offloading is supported on commercially available AMD Instinct\trademark Accelerators, these capabilities are also available on individual developers’ systems in addition to supporting server-class \acp{GPU} in massively parallel supercomputers.
+Quite often, vendor-provided closed-source compilers are only made available or licensed for use on the systems which they are delivered with.
+By providing OpenMP offload capability in AMD Flang, this allows developers to initially develop their applications on a smaller scale on their own dedicated workstations before deploying their code on larger shared systems.
+
+Future work will focus on the implementation of offloading \code{DO CONCURRENT} loops to the \ac{GPU}, as well as completing  OpenMP supported by adding features through OpenMP version 6.0 (e.g., loop transformations, the \code{workdistribute} construct, and more control over memory allocations and data mapping).
+Additionally, given that the OpenMP \ac{MLIR} dialect itself is language independent, any other front-end that generates \ac{MLIR} in the future can utilize this support as well.
+
+A large portion of the work presented in this paper has been provides to the upstream Flang implementation of the LLVM project.
+We are actively working to provide additional pull requests to merge all parts of the AMD Next Generation Fortran Compiler.
 
 \input{acronyms}
 
