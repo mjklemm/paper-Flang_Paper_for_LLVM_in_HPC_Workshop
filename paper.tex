@@ -450,14 +450,13 @@ The resulting host and device LLVM modules are later linked together following t
 
 \subsection{Early vs. late outlining}
 
-\ac{MLIR} allows one \ac{IR} module to embed constructs which belong to different levels of abstraction, different programming models (e.g. serial and parallel constructs), and even constructs that will be executed on different hardware targets (e.g., CPU, GPU, or other accelerators).
-The LLVM Flang compiler exploits this capability by embedding OpenMP constructs that are to be executed on the GPU inside the host context (parent host functions) where these constructs were written by the programmer.
-Such surrounding host context provides compiler analyses and optimizations with a holistic view of the input program; enabling such passes to work across device boundaries when suitable.
+\ac{MLIR} allows a single module to embed constructs belonging to different levels of abstraction, different programming models (e.g. serial and parallel constructs), and even constructs that will be executed on different hardware targets (e.g., CPU, GPU, or other accelerators).
+The LLVM Flang compiler exploits this capability by keeping the host context (parent host functions) around OpenMP constructs that are to be executed on the GPU (i.e., \code{target} regions).
+This surrounding host context provides compiler analyses and optimizations with a holistic view of the input program; enabling such passes to work across device boundaries when suitable.
 For example, optimizations such as constant propagation and different canonicalization passes can work across the CPU-GPU boundary to save unnecessary mapping of memory from the CPU to the GPU.
 Such nesting of constructs belonging to different hardware devices can be maintained throughout the compiler pipeline as late as needed.
-In LLVM Flang's case, such late outlining of GPU kernels and functions takes place only when the compiler converts \ac{MLIR} to LLVM \ac{IR}.
-This form of late outlining is different from other OpenMP compilers such as Clang.
-In Clang, the front-end is responsible for outlining device kernels at the very start of the lowering process to LLVM \ac{IR}.
+In LLVM Flang's case, the outlining of GPU kernels and functions takes place only at the latest \ac{MLIR} stage, when translating it to LLVM \ac{IR}.
+This form of late outlining is different from other OpenMP compilers such as Clang, where the front-end is responsible for outlining device kernels at the very start of the lowering process to LLVM \ac{IR}.
 
 % The outlining process in LLVM Flang is a form of late outlining, where the primary differentiation between host and device code occurs late in the compilation pipeline when the compiler is converting from \ac{MLIR} to LLVM \ac{IR}. 
 % The code to be outlined as kernels are marked by the aforementioned OpenMP specification's \code{target} directive. 
