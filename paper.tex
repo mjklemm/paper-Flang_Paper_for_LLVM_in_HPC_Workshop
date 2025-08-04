@@ -472,7 +472,7 @@ This form of late outlining is different from other OpenMP compilers such as Cla
 In an earlier phase, the compiler created \code{omp.map.info} statements in the \ac{IR} to capture mapped data needed for device execution (see Section~\ref{sec:OpenMPDataMappingAnalysis}).
 This information needs to be passed to the runtime system to be able to perform necessary data transfers.
 This is done via the \code{\%kernel\_args} argument of the \code{\_\_tgt\_target\_kernel} entry point (see Listing~\ref{lst:FortranExampleLLVMIR}).
-The data structure consists of a structure of arrays, in which each array element corresponds to a mapped object with information about base pointer of the mapped object, its size, and additional flags for data-movement direction, etc.
+The data structure consists of a structure of arrays, in which each array element corresponds to a mapped object with information about the base pointer of the mapped object, its size, and additional flags for data-movement direction, etc.
 The actual pointers to data that are used in the offloaded code are passed as pointer arguments to the outlined function.
 At runtime, the offload library implementation will process the mapping information provided and the outlined function can access the mapped data via the passed pointers.
 
@@ -599,7 +599,7 @@ At this stage of the pipeline, the loop's representation still maintains the ori
 
 How this loop is further lowered by the compiler can be controlled by the \code{-fdo-concurrent-to-openmp} flag.
 For example, setting the flag to \code{host}, the \ac{FIR} and \ac{HLFIR} in Listing~\ref{lst:DCFIRExample} is lowered to an equivalent OpenMP program that parallelizes the loop on the CPU (Listing~\ref{lst:DCOMPExample}).
-The transformed IR is mix of the three dialects: \code{fir}, \code{hlfir}, and \code{omp}.
+The transformed IR is a mix of the three dialects: \ac{FIR}, \ac{HLFIR}, and the OpenMP dialect.
 Note, in particular, that the loop's body is not affected by the transformation; only the constructs that control how that loop will be executed.
 
 The advantage of such progressive lowering is that the compiler can maintain the original program semantics as much as needed within the pipeline, which allows easier analyses and transformations.
@@ -667,7 +667,8 @@ The compiler (1) creates a new \code{omp.simd} \ac{MLIR} operation, (2) transfer
 
 Binding the \code{loop} directive to a \code{parallel} region results in different handling of the \code{omp.loop} operation.
 Listing \ref{lst:LoopDirWSLoopExample} demonstrates this scenario where the same \code{omp.loop} in Listing \ref{lst:LoopDirMLIRExample} is now mapped to an \code{omp.wsloop} (i.e., a work-sharing loop) operation.
-To perform this transformation, the compiler checks the surrounding context of the input \code{omp.loop} and, if it finds that the \code{omp.loop} operation is directly nested inside of an \code{omp.parallel} operation, then the \code{loop} directive is mapped to a work-sharing loop.
+To perform this transformation, the compiler checks the surrounding context of the input \code{omp.loop}.
+If it finds that the \code{omp.loop} operation is directly nested inside of an \code{omp.parallel} operation, then the \code{loop} directive is mapped to a work-sharing loop.
 
 Handling the case where a \code{loop} directive binds to a \code{teams} region is more involved than the previous two cases.
 To gain the most performance, a \code{loop} directive could be mapped to a \code{distribute parallel do} composite construct.
